@@ -1850,3 +1850,56 @@ document.addEventListener('touchend',function(e){var n=Date.now();if(n-_lt<320)e
 </script>
 </body>
 </html>
+/* --- Fix für die Radar-Orientierung (Forward-Lock) --- */
+window.addEventListener('deviceorientation', function(event) {
+    // Alpha ist die Kompass-Richtung (0-360 Grad)
+    if (event.alpha !== null) {
+        S.currentHeading = event.alpha; 
+    }
+}, true);
+
+// Diese Funktion sorgt dafür, dass die "Red Chain" vor dir erscheint
+function drawDirectionalRadar() {
+    const canvas = document.getElementById('radarCanvas'); // Falls dein Radar so heißt
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.save();
+    ctx.translate(cx, cy);
+    
+    // Rotation basierend auf deinem Blickwinkel
+    // Damit "Vorwärts" immer oben im Radar ist:
+    ctx.rotate((-S.currentHeading) * Math.PI / 180);
+
+    // Zeichne die rote Kette (Messwerte)
+    S.hmPoints.forEach(p => {
+        if (p.signal < -90) { // Nur die "Reds"
+            ctx.beginPath();
+            ctx.arc(p.relX, p.relY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = "#ff0000"; // Reines Rot
+            ctx.fill();
+        }
+    });
+    
+    ctx.restore();
+    
+    // Zeichne den festen Vorwärts-Pfeil (Dein Kopf)
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 10);
+    ctx.lineTo(cx - 5, cy + 5);
+    ctx.lineTo(cx + 5, cy + 5);
+    ctx.closePath();
+    ctx.fillStyle = "#00ff00"; // Grüner Cursor für DICH
+    ctx.fill();
+}
+
+// Den Loop erweitern, falls er noch nicht läuft
+function mainLoop() {
+    drawDirectionalRadar();
+    requestAnimationFrame(mainLoop);
+}
+mainLoop();

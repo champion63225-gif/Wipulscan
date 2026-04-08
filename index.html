@@ -1850,56 +1850,61 @@ document.addEventListener('touchend',function(e){var n=Date.now();if(n-_lt<320)e
 </script>
 </body>
 </html>
-/* --- Fix für die Radar-Orientierung (Forward-Lock) --- */
-window.addEventListener('deviceorientation', function(event) {
-    // Alpha ist die Kompass-Richtung (0-360 Grad)
-    if (event.alpha !== null) {
-        S.currentHeading = event.alpha; 
-    }
-}, true);
+<!-- Dieser Block repariert das Intro und aktiviert die V-Sicht -->
+<script>
+(function() {
+    // Falls die Variablen noch fehlen
+    if (typeof S === 'undefined') window.S = { currentHeading: 0, hmPoints: [] };
 
-// Diese Funktion sorgt dafür, dass die "Red Chain" vor dir erscheint
-function drawDirectionalRadar() {
-    const canvas = document.getElementById('radarCanvas'); // Falls dein Radar so heißt
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.save();
-    ctx.translate(cx, cy);
-    
-    // Rotation basierend auf deinem Blickwinkel
-    // Damit "Vorwärts" immer oben im Radar ist:
-    ctx.rotate((-S.currentHeading) * Math.PI / 180);
+    // 1. ZÜNDUNG: Klick startet das Intro/Kamera
+    const startApp = () => {
+        const intro = document.querySelector('.intro-layer') || document.body;
+        // Wir erzwingen das Ausblenden des Text-Salats, falls noch da
+        document.body.style.color = "transparent"; 
+        setTimeout(() => document.body.style.color = "", 100);
+        
+        console.log("Wipulscan gestartet...");
+    };
+    document.addEventListener('click', startApp, {once: true});
 
-    // Zeichne die rote Kette (Messwerte)
-    S.hmPoints.forEach(p => {
-        if (p.signal < -90) { // Nur die "Reds"
+    // 2. KOMPASS-FIX (iPhone Vorwärts-Sicht)
+    window.addEventListener('deviceorientation', function(e) {
+        let heading = e.webkitCompassHeading || e.alpha;
+        if (heading) S.currentHeading = heading;
+    }, true);
+
+    // 3. RADAR-LOGIK (Dein Vegan-Symbol Style)
+    window.drawDirectionalRadar = function() {
+        const canvas = document.getElementById('radarCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Dein Sichtfeld-Indikator
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((-S.currentHeading) * Math.PI / 180);
+
+        // Die rote Kette (Messpunkte)
+        S.hmPoints.forEach(p => {
             ctx.beginPath();
-            ctx.arc(p.relX, p.relY, 3, 0, Math.PI * 2);
-            ctx.fillStyle = "#ff0000"; // Reines Rot
+            ctx.arc(p.relX, p.relY, 4, 0, Math.PI * 2);
+            ctx.fillStyle = "red";
             ctx.fill();
-        }
-    });
-    
-    ctx.restore();
-    
-    // Zeichne den festen Vorwärts-Pfeil (Dein Kopf)
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - 10);
-    ctx.lineTo(cx - 5, cy + 5);
-    ctx.lineTo(cx + 5, cy + 5);
-    ctx.closePath();
-    ctx.fillStyle = "#00ff00"; // Grüner Cursor für DICH
-    ctx.fill();
-}
+        });
+        ctx.restore();
+    };
 
-// Den Loop erweitern, falls er noch nicht läuft
-function mainLoop() {
-    drawDirectionalRadar();
-    requestAnimationFrame(mainLoop);
-}
-mainLoop();
+    // Loop starten
+    const tick = () => {
+        if(typeof drawDirectionalRadar === 'function') drawDirectionalRadar();
+        requestAnimationFrame(tick);
+    };
+    tick();
+})();
+</script>
+</body>
+</html>

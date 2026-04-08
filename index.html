@@ -138,6 +138,34 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
 .s-copy{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:.19em;
   color:rgba(212,175,55,.2);margin-top:16px;text-align:center;line-height:2}
 
+/* ══════════ CINEMATIC INTRO ══════════ */
+#intro{
+  position:fixed;inset:0;z-index:300;
+  background:#000;
+  display:none;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#intro.active{display:flex}
+#intro-canvas{position:absolute;inset:0;width:100%;height:100%}
+
+/* Iris mask — the camera reveal */
+#iris{
+  position:absolute;inset:0;
+  background:#000;
+  pointer-events:none;
+  /* clip-path animated by JS */
+}
+
+/* Skip button */
+#intro-skip{
+  position:absolute;bottom:calc(28px + var(--sb));right:24px;z-index:10;
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.32em;
+  color:rgba(255,255,255,.28);background:transparent;border:none;cursor:pointer;
+  padding:8px 12px;-webkit-appearance:none;
+  transition:color .3s;
+}
+#intro-skip:hover{color:rgba(255,255,255,.55)}
+
 /* ══════════ HUD — 15% TOP FROSTED GLASS ══════════ */
 #hud{position:fixed;top:0;left:0;right:0;z-index:20;display:none;flex-direction:column;pointer-events:none}
 #hud.on{display:flex}
@@ -306,6 +334,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
 </style>
 </head>
 <body>
+
+<!-- ══════════ CINEMATIC INTRO ══════════ -->
+<div id="intro">
+  <canvas id="intro-canvas"></canvas>
+  <div id="iris"></div>
+  <button id="intro-skip" onclick="skipIntro()">SKIP ›</button>
+</div>
 
 <!-- CONSENT -->
 <div id="consent">
@@ -1258,16 +1293,520 @@ window.acceptConsent=function(){
   setTimeout(function(){el.style.display='none';showSplash();},740);
 };
 
-function showSplash(){$('splash').style.display='flex';}
+/* ═══════════════════════════════════════════════════════════
+   CINEMATIC LAUNCH ENGINE · WIPULSCAN PRO v5.1
+   Sequence: BlackOut → WiFi Eruption → 2× Pulse+Sound →
+             Title Drop → Iris Reveal → Auto-Scan
+═══════════════════════════════════════════════════════════ */
 
-window.enterScanner=async function(){
-  var sp=$('splash');sp.classList.add('out');
-  setTimeout(function(){sp.style.display='none';},920);
+var INTRO = {
+  canvas: null, ctx: null,
+  W: 0, H: 0, cx: 0, cy: 0,
+  raf: null,
+  phase: 0,       /* 0=blackout 1=eruption 2=pulse1 3=pulse2 4=title 5=iris 6=done */
+  t: 0,           /* phase-local timer (0..1) */
+  tAbs: 0,        /* absolute ms since phase start */
+  phaseStart: 0,
+  logoScale: 0,   /* 0=invisible 1=full screen */
+  logoAlpha: 0,
+  pulseRing: 0,   /* 0..1 expansion */
+  pulseAlpha: 0,
+  titleAlpha: 0,
+  titleY: 0,      /* 0=offscreen 1=in place */
+  subtitleAlpha: 0,
+  irisRadius: 0,  /* 0=fully covered, max=fully open */
+  irisMax: 0,
+  fragments: [],  /* logo dissolve particles */
+  audioCtx: null,
+  skipped: false,
+};
+
+/* Timing (ms) for each phase */
+var INTRO_T = {
+  blackout:  600,
+  eruption: 900,
+  gap1:     220,
+  pulse1:   550,
+  gap2:     160,
+  pulse2:   550,
+  gap3:     280,
+  title:    700,
+  hold:     500,
+  iris:     1100,
+};
+
+/* ── WebAudio synthesis ── */
+function introAudio(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    INTRO.audioCtx = new AC();
+  }catch(e){ return; }
+}
+
+function playBassPulse(){
+  if(!INTRO.audioCtx) return;
+  var ac = INTRO.audioCtx;
+  if(ac.state === 'suspended') ac.resume();
+  var now = ac.currentTime;
+
+  /* Deep sub-bass thud */
+  var osc = ac.createOscillator();
+  var gain = ac.createGain();
+  var comp = ac.createDynamicsCompressor();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(60, now);
+  osc.frequency.exponentialRampToValueAtTime(28, now + 0.4);
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.7, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+  osc.connect(gain); gain.connect(comp); comp.connect(ac.destination);
+  osc.start(now); osc.stop(now + 0.6);
+
+  /* Harmonic layer */
+  var osc2 = ac.createOscillator();
+  var g2   = ac.createGain();
+  osc2.type = 'triangle';
+  osc2.frequency.setValueAtTime(120, now);
+  osc2.frequency.exponentialRampToValueAtTime(55, now + 0.3);
+  g2.gain.setValueAtTime(0.18, now);
+  g2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+  osc2.connect(g2); g2.connect(ac.destination);
+  osc2.start(now); osc2.stop(now + 0.45);
+}
+
+function playSonarPing(){
+  if(!INTRO.audioCtx) return;
+  var ac = INTRO.audioCtx;
+  if(ac.state === 'suspended') ac.resume();
+  var now = ac.currentTime;
+
+  /* High-frequency sonar */
+  var osc = ac.createOscillator();
+  var gain = ac.createGain();
+  var filter = ac.createBiquadFilter();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1800, now);
+  osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+
+  filter.type = 'bandpass';
+  filter.frequency.value = 1400;
+  filter.Q.value = 3;
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.55, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+  osc.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+  osc.start(now); osc.stop(now + 0.5);
+
+  /* Reverb tail — delayed echo */
+  var echo = ac.createOscillator();
+  var eg   = ac.createGain();
+  echo.type = 'sine';
+  echo.frequency.setValueAtTime(880, now + 0.08);
+  echo.frequency.exponentialRampToValueAtTime(440, now + 0.35);
+  eg.gain.setValueAtTime(0, now + 0.08);
+  eg.gain.linearRampToValueAtTime(0.18, now + 0.1);
+  eg.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+  echo.connect(eg); eg.connect(ac.destination);
+  echo.start(now + 0.08); echo.stop(now + 0.55);
+}
+
+/* ── WiFi logo draw (on intro canvas) ── */
+function drawIntroWifi(cx, cy, r, col, alpha, glowStrength){
+  var c = INTRO.ctx;
+  if(alpha <= 0 || r <= 4) return;
+  c.save();
+  c.globalAlpha = alpha;
+
+  var a0 = Math.PI + Math.PI * 0.17;
+  var a1 = 2 * Math.PI - Math.PI * 0.17;
+  var arcs = [{r:r, sw:r*0.145}, {r:r*0.64, sw:r*0.115}, {r:r*0.36, sw:r*0.09}];
+
+  for(var i = 0; i < arcs.length; i++){
+    var ar = arcs[i];
+    /* Glow */
+    c.save();
+    c.filter = 'blur('+(glowStrength * ar.r * 0.06)+'px)';
+    c.beginPath(); c.arc(cx, cy, ar.r, a0, a1);
+    c.strokeStyle = col; c.lineWidth = ar.sw * 2.2; c.lineCap = 'round'; c.stroke();
+    c.restore();
+    /* Main */
+    c.beginPath(); c.arc(cx, cy, ar.r, a0, a1);
+    c.strokeStyle = col; c.lineWidth = ar.sw; c.lineCap = 'round'; c.stroke();
+    /* Inner sheen */
+    c.beginPath(); c.arc(cx, cy, ar.r, a0, a1);
+    var sh = c.createLinearGradient(cx - ar.r, cy, cx + ar.r, cy);
+    sh.addColorStop(0,'rgba(255,255,255,0)'); sh.addColorStop(0.44,'rgba(255,255,255,.3)');
+    sh.addColorStop(0.56,'rgba(255,255,255,.12)'); sh.addColorStop(1,'rgba(255,255,255,0)');
+    c.strokeStyle = sh; c.lineWidth = ar.sw * 0.4; c.lineCap = 'round'; c.stroke();
+  }
+
+  /* Dot */
+  var dy = cy + r * 0.61;
+  var dr = r * 0.1;
+  c.save(); c.filter = 'blur('+(glowStrength * r * 0.04)+'px)';
+  c.beginPath(); c.arc(cx, dy, dr * 2.5, 0, Math.PI*2); c.fillStyle = col; c.fill();
+  c.restore();
+  c.beginPath(); c.arc(cx, dy, dr, 0, Math.PI*2); c.fillStyle = col; c.fill();
+
+  c.restore();
+}
+
+/* ── Generate fragments for dissolve ── */
+function generateFragments(){
+  INTRO.fragments = [];
+  var count = 80;
+  for(var i = 0; i < count; i++){
+    var angle = Math.random() * Math.PI * 2;
+    var dist  = 20 + Math.random() * Math.min(INTRO.W, INTRO.H) * 0.45;
+    INTRO.fragments.push({
+      x: INTRO.cx + Math.cos(angle) * dist * 0.3,
+      y: INTRO.cy + Math.sin(angle) * dist * 0.3,
+      tx: INTRO.cx + Math.cos(angle) * dist,   /* target x */
+      ty: INTRO.cy + Math.sin(angle) * dist,   /* target y */
+      r: 2 + Math.random() * 5,
+      col: Math.random() > 0.5 ? '#d4af37' : (Math.random() > 0.5 ? '#00ff88' : '#00c8ff'),
+      alpha: 0.6 + Math.random() * 0.4,
+      speed: 0.4 + Math.random() * 0.6,
+    });
+  }
+}
+
+/* ── easing ── */
+function easeOut(t){ return 1 - Math.pow(1-t, 3); }
+function easeInOut(t){ return t<0.5 ? 2*t*t : -1+(4-2*t)*t; }
+function easeElastic(t){
+  if(t===0||t===1) return t;
+  return Math.pow(2,-10*t)*Math.sin((t*10-0.75)*(2*Math.PI)/3)+1;
+}
+
+/* ── PHASE RUNNER ── */
+var introPhaseQueue = []; /* pre-computed phase schedule */
+var introStartTime = 0;
+var introPhaseTimes = {}; /* absolute ms start of each named phase */
+
+function buildSchedule(){
+  var T = INTRO_T;
+  var t = 0;
+  introPhaseTimes.blackout  = t; t += T.blackout;
+  introPhaseTimes.eruption  = t; t += T.eruption;
+  introPhaseTimes.gap1      = t; t += T.gap1;
+  introPhaseTimes.pulse1    = t; t += T.pulse1;  /* bass */
+  introPhaseTimes.gap2      = t; t += T.gap2;
+  introPhaseTimes.pulse2    = t; t += T.pulse2;  /* sonar */
+  introPhaseTimes.gap3      = t; t += T.gap3;
+  introPhaseTimes.title     = t; t += T.title;
+  introPhaseTimes.hold      = t; t += T.hold;
+  introPhaseTimes.iris      = t; t += T.iris;
+  introPhaseTimes.total     = t;
+}
+
+/* ── MAIN INTRO LOOP ── */
+var bassPlayed = false, sonarPlayed = false, titleDropped = false;
+
+function introLoop(now){
+  if(INTRO.skipped) return;
+  INTRO.raf = requestAnimationFrame(introLoop);
+
+  var elapsed = now - introStartTime;
+  var T = INTRO_T;
+  var c = INTRO.ctx;
+  var W = INTRO.W, H = INTRO.H, cx = INTRO.cx, cy = INTRO.cy;
+
+  c.clearRect(0, 0, W, H);
+
+  /* ── Background always black ── */
+  c.fillStyle = '#000000';
+  c.fillRect(0, 0, W, H);
+
+  var maxR = Math.min(W, H) * 0.46;
+
+  /* ──────────────────────────────
+     PHASE: ERUPTION
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.eruption && elapsed < introPhaseTimes.gap1){
+    var pt = (elapsed - introPhaseTimes.eruption) / T.eruption;
+    var scale = easeElastic(Math.min(pt, 1));
+    var r = maxR * scale;
+    var glow = 0.6 + scale * 0.4;
+    drawIntroWifi(cx, cy, r, '#d4af37', Math.min(scale * 1.6, 1), glow);
+    INTRO.logoScale = scale;
+    INTRO.logoAlpha = Math.min(scale * 1.6, 1);
+  }
+
+  /* ──────────────────────────────
+     PHASE: GAP1 (logo holds)
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.gap1 && elapsed < introPhaseTimes.pulse1){
+    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+  }
+
+  /* ──────────────────────────────
+     PHASE: PULSE 1 — BASS (neon green)
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.pulse1 && elapsed < introPhaseTimes.gap2){
+    if(!bassPlayed){ playBassPulse(); bassPlayed = true; }
+    var pt = (elapsed - introPhaseTimes.pulse1) / T.pulse1;
+    /* Color flash: gold → neon green → back */
+    var flashT = Math.sin(pt * Math.PI);
+    var r2 = Math.round(lerp(212, 0, flashT));
+    var g2 = Math.round(lerp(175, 255, flashT));
+    var b2 = Math.round(lerp(55, 136, flashT));
+    var pCol = 'rgb('+r2+','+g2+','+b2+')';
+    var glow2 = 1 + flashT * 2.5;
+    drawIntroWifi(cx, cy, maxR, pCol, 1, glow2);
+
+    /* Expanding ring */
+    var ringR = maxR * (1 + pt * 0.65);
+    var ringA = (1 - pt) * 0.7;
+    c.beginPath(); c.arc(cx, cy, ringR, 0, Math.PI*2);
+    c.strokeStyle = 'rgba('+r2+','+g2+','+b2+','+ringA+')';
+    c.lineWidth = 6 * (1-pt); c.stroke();
+
+    /* Second outer ring */
+    var ringR2 = maxR * (1 + pt * 1.1);
+    var ringA2 = (1 - pt) * 0.35;
+    c.beginPath(); c.arc(cx, cy, ringR2, 0, Math.PI*2);
+    c.strokeStyle = 'rgba('+r2+','+g2+','+b2+','+ringA2+')';
+    c.lineWidth = 3 * (1-pt); c.stroke();
+
+    /* Screen flash */
+    c.fillStyle = 'rgba('+r2+','+g2+','+b2+','+(flashT * 0.08)+')';
+    c.fillRect(0, 0, W, H);
+  }
+
+  /* ──────────────────────────────
+     PHASE: GAP2
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.gap2 && elapsed < introPhaseTimes.pulse2){
+    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+  }
+
+  /* ──────────────────────────────
+     PHASE: PULSE 2 — SONAR PING (neon yellow-cyan)
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.pulse2 && elapsed < introPhaseTimes.gap3){
+    if(!sonarPlayed){ playSonarPing(); sonarPlayed = true; }
+    var pt = (elapsed - introPhaseTimes.pulse2) / T.pulse2;
+    var flashT = Math.sin(pt * Math.PI);
+    /* Cyan-yellow flash */
+    var r3 = Math.round(lerp(212, 200, flashT));
+    var g3 = Math.round(lerp(175, 255, flashT));
+    var b3 = Math.round(lerp(55, 60, flashT));
+    var pCol2 = 'rgb('+r3+','+g3+','+b3+')';
+    var glow3 = 1 + flashT * 3;
+    drawIntroWifi(cx, cy, maxR, pCol2, 1, glow3);
+
+    /* Sonar wave rings (3 expanding) */
+    for(var ri = 0; ri < 3; ri++){
+      var rDelay = ri * 0.18;
+      var rPt = Math.max(0, pt - rDelay);
+      if(rPt <= 0) continue;
+      var rR = maxR * (1 + rPt * 0.9);
+      var rA = Math.max(0, (1 - rPt) * 0.55);
+      c.beginPath(); c.arc(cx, cy, rR, 0, Math.PI*2);
+      c.strokeStyle = 'rgba('+r3+','+g3+','+b3+','+rA+')';
+      c.lineWidth = 3.5 * Math.max(0, 1-rPt*1.5);
+      c.stroke();
+    }
+
+    /* Screen cyan flash */
+    c.fillStyle = 'rgba('+r3+','+g3+','+b3+','+(flashT * 0.06)+')';
+    c.fillRect(0, 0, W, H);
+  }
+
+  /* ──────────────────────────────
+     PHASE: GAP3 — logo still visible
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.gap3 && elapsed < introPhaseTimes.title){
+    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+  }
+
+  /* ──────────────────────────────
+     PHASE: TITLE DROP
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.title && elapsed < introPhaseTimes.hold){
+    if(!titleDropped){ titleDropped = true; }
+    var pt = easeOut((elapsed - introPhaseTimes.title) / T.title);
+
+    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+
+    /* Title slides down from above logo */
+    var titleBaseY = cy - maxR * 1.08;
+    var titleY = titleBaseY - 40 * (1 - pt);
+    var tAlpha = Math.min(pt * 2, 1);
+
+    /* Main title */
+    c.save();
+    c.globalAlpha = tAlpha;
+    c.shadowColor  = '#d4af37'; c.shadowBlur = 18 * pt;
+    c.fillStyle = '#f5e070';
+    c.font = "700 "+Math.round(Math.min(W,H)*0.072)+"px 'Cinzel Decorative',serif";
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.letterSpacing = '0.12em';
+    c.fillText('WIPULSCAN · PRO', cx, titleY);
+    c.restore();
+
+    /* Sub-title */
+    var subAlpha = Math.max(0, (pt - 0.5) * 2);
+    c.save();
+    c.globalAlpha = subAlpha * 0.6;
+    c.fillStyle = '#888888';
+    c.font = "400 "+Math.round(Math.min(W,H)*0.028)+"px 'Share Tech Mono',monospace";
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('Powered by Cobra Dynamics', cx, titleY + Math.min(W,H)*0.054);
+    c.restore();
+  }
+
+  /* ──────────────────────────────
+     PHASE: HOLD (everything visible)
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.hold && elapsed < introPhaseTimes.iris){
+    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+
+    var titleBaseY = cy - maxR * 1.08;
+    c.save();
+    c.shadowColor='#d4af37';c.shadowBlur=18;c.globalAlpha=1;
+    c.fillStyle='#f5e070';
+    c.font="700 "+Math.round(Math.min(W,H)*0.072)+"px 'Cinzel Decorative',serif";
+    c.textAlign='center';c.textBaseline='middle';
+    c.fillText('WIPULSCAN · PRO',cx,titleBaseY);
+    c.restore();
+    c.save();c.globalAlpha=0.55;c.fillStyle='#888';
+    c.font="400 "+Math.round(Math.min(W,H)*0.028)+"px 'Share Tech Mono',monospace";
+    c.textAlign='center';c.textBaseline='middle';
+    c.fillText('Powered by Cobra Dynamics',cx,titleBaseY+Math.min(W,H)*0.054);
+    c.restore();
+  }
+
+  /* ──────────────────────────────
+     PHASE: IRIS REVEAL
+     Logo dissolves into fragments,
+     iris circle expands revealing camera
+  ────────────────────────────── */
+  if(elapsed >= introPhaseTimes.iris){
+    var pt = Math.min((elapsed - introPhaseTimes.iris) / T.iris, 1);
+    var easeT = easeInOut(pt);
+
+    /* Logo fades out */
+    var logoAlpha = Math.max(0, 1 - easeT * 2.2);
+    if(logoAlpha > 0) drawIntroWifi(cx, cy, maxR, '#d4af37', logoAlpha, 1);
+
+    /* Title fades out */
+    var titleAlpha = Math.max(0, 1 - pt * 3);
+    if(titleAlpha > 0){
+      var titleBaseY = cy - maxR * 1.08;
+      c.save();c.globalAlpha=titleAlpha;c.fillStyle='#f5e070';
+      c.font="700 "+Math.round(Math.min(W,H)*0.072)+"px 'Cinzel Decorative',serif";
+      c.textAlign='center';c.textBaseline='middle';
+      c.fillText('WIPULSCAN · PRO',cx,titleBaseY);
+      c.restore();
+    }
+
+    /* Dissolve fragments fly outward */
+    if(INTRO.fragments.length > 0){
+      for(var fi = 0; fi < INTRO.fragments.length; fi++){
+        var f = INTRO.fragments[fi];
+        var fp = Math.min(pt * f.speed * 1.4, 1);
+        var fx = lerp(f.x, f.tx, easeOut(fp));
+        var fy = lerp(f.y, f.ty, easeOut(fp));
+        var fa = f.alpha * Math.max(0, 1 - fp * 1.3);
+        if(fa <= 0) continue;
+        c.beginPath(); c.arc(fx, fy, f.r * (1-fp*0.4), 0, Math.PI*2);
+        c.fillStyle = f.col;
+        c.globalAlpha = fa;
+        c.fill();
+        c.globalAlpha = 1;
+      }
+    }
+
+    /* Iris: black overlay with expanding circular cutout */
+    var irisR = INTRO.irisMax * easeInOut(Math.min(pt * 1.05, 1));
+    c.save();
+    c.beginPath();
+    /* Outer rectangle */
+    c.rect(0, 0, W, H);
+    /* Inner circle cutout (iris) */
+    c.arc(cx, cy, Math.max(0, irisR), 0, Math.PI*2, true);
+    c.fillStyle = '#000000';
+    c.fill('evenodd');
+    c.restore();
+
+    /* Done */
+    if(pt >= 1) finishIntro();
+  }
+}
+
+/* ── Start intro ── */
+function startIntro(){
+  var el = document.getElementById('intro');
+  var ic = document.getElementById('intro-canvas');
+  INTRO.canvas = ic;
+  INTRO.ctx    = ic.getContext('2d');
+  INTRO.W = ic.width  = window.innerWidth;
+  INTRO.H = ic.height = window.innerHeight;
+  INTRO.cx = INTRO.W / 2;
+  INTRO.cy = INTRO.H * 0.48; /* Slightly below center */
+  INTRO.irisMax = Math.sqrt(INTRO.W * INTRO.W + INTRO.H * INTRO.H) * 0.62;
+
+  generateFragments();
+  buildSchedule();
+  introAudio();
+
+  bassPlayed = false; sonarPlayed = false; titleDropped = false;
+  INTRO.skipped = false;
+  introStartTime = performance.now();
+
+  el.classList.add('active');
+  INTRO.raf = requestAnimationFrame(introLoop);
+}
+
+/* ── Finish intro → auto-enter scanner ── */
+async function finishIntro(){
+  if(INTRO.skipped) return;
+  INTRO.skipped = true; /* prevent double-call */
+  cancelAnimationFrame(INTRO.raf);
+
+  var el = document.getElementById('intro');
+  el.style.transition = 'opacity .45s ease';
+  el.style.opacity = '0';
+  setTimeout(function(){ el.classList.remove('active'); el.style.opacity=''; }, 460);
+
+  /* Directly enter scanner + auto-start scan */
+  await window.enterScanner(true);
+}
+
+/* ── Skip button ── */
+window.skipIntro = function(){
+  if(INTRO.skipped) return;
+  INTRO.skipped = true;
+  cancelAnimationFrame(INTRO.raf);
+  var el = document.getElementById('intro');
+  el.style.transition = 'opacity .3s ease';
+  el.style.opacity = '0';
+  setTimeout(function(){ el.classList.remove('active'); el.style.opacity=''; }, 320);
+  window.enterScanner(true);
+};
+
+function showSplash(){ startIntro(); }
+
+window.enterScanner=async function(autoScan){
+  /* Hide old splash if still visible (legacy path) */
+  var sp=$('splash');if(sp)sp.style.display='none';
+
   $('hud').classList.add('on');$('btn').classList.add('on');
   $('f-set').classList.add('on');$('f-pro').classList.add('on');
   positionUI();
   await startCamera();
   requestAnimationFrame(loop);
+
+  /* Auto-start scan when coming from cinematic intro */
+  if(autoScan) setTimeout(function(){ if(!S.scanning) startScan(); }, 380);
 };
 
 window.toggleScan=toggleScan;

@@ -138,6 +138,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
 .s-copy{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:.19em;
   color:rgba(212,175,55,.2);margin-top:16px;text-align:center;line-height:2}
 
+/* ══════════ NORTH-UP RADAR ══════════ */
+#radar-wrap{
+  position:fixed;z-index:24;
+  pointer-events:none;display:none;
+}
+#radar-wrap.on{display:block}
+#radar-canvas{display:block;border-radius:50%;}
+
 /* ══════════ CINEMATIC INTRO ══════════ */
 #intro{
   position:fixed;inset:0;z-index:300;
@@ -498,6 +506,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
   </div>
 </div>
 
+<div id="radar-wrap">
+  <canvas id="radar-canvas"></canvas>
+</div>
+
 <!-- Floating UI -->
 <div id="real-badge">◈ REAL DATA</div>
 <div id="status-txt"></div>
@@ -675,9 +687,22 @@ var ctx=arCanvas.getContext('2d');
 var hmCanvas=document.getElementById('hmc');
 var hmCtx=hmCanvas.getContext('2d');
 
+/* Logical (CSS) size — used for all coordinate math */
+var CW=0, CH=0;
+
 function resize(){
-  arCanvas.width=innerWidth; arCanvas.height=innerHeight;
-  hmCanvas.width=innerWidth; hmCanvas.height=innerHeight;
+  var dpr=window.devicePixelRatio||1;
+  CW=window.innerWidth; CH=window.innerHeight;
+  /* AR canvas */
+  arCanvas.width=Math.round(CW*dpr); arCanvas.height=Math.round(CH*dpr);
+  arCanvas.style.width=CW+'px'; arCanvas.style.height=CH+'px';
+  ctx.setTransform(1,0,0,1,0,0);   /* reset before rescale */
+  ctx.scale(dpr,dpr);
+  /* Heatmap canvas */
+  hmCanvas.width=Math.round(CW*dpr); hmCanvas.height=Math.round(CH*dpr);
+  hmCanvas.style.width=CW+'px'; hmCanvas.style.height=CH+'px';
+  hmCtx.setTransform(1,0,0,1,0,0);
+  hmCtx.scale(dpr,dpr);
   S.hmDirty=true;
 }
 addEventListener('resize',resize,{passive:true});
@@ -806,7 +831,7 @@ function renderHeatmap(){
   if(!S.hmDirty) return;
   S.hmDirty=false;
 
-  var W=hmCanvas.width, H=hmCanvas.height;
+  var W=CW, H=CH;
   var fh=frostH();
   hmCtx.clearRect(0,0,W,H);
 
@@ -858,14 +883,152 @@ window.toggleHeatmap=function(){
   }
 };
 
+/* ═══════════════════════════════════════════
+   NORTH-UP RADAR ENGINE
+   — Rotates against compass heading so
+     "Forward" always points up on screen.
+   — Red Chain: measurement points plotted
+     at their real bearing & distance.
+   — Static forward arrow = where user looks.
+═══════════════════════════════════════════ */
+var RADAR = {
+  canvas: null, ctx: null,
+  size: 0, dpr: 1,
+  heading: 0, smoothH: 0,
+  points: [],
+  maxDistPx: 0,
+};
+
+function initRadar(){
+  var rc = document.getElementById('radar-canvas');
+  if(!rc) return;
+  RADAR.canvas = rc; RADAR.ctx = rc.getContext('2d');
+  RADAR.dpr = window.devicePixelRatio || 1;
+  RADAR.size = Math.max(90, Math.round(Math.min(CW,CH)*0.22));
+  var px = Math.round(RADAR.size * RADAR.dpr);
+  rc.width = px; rc.height = px;
+  rc.style.width  = RADAR.size+'px'; rc.style.height = RADAR.size+'px';
+  RADAR.maxDistPx = RADAR.size * 0.42;
+}
+
+function radarAddPoint(bearingDeg, distNorm, sig){
+  RADAR.points.push({b:bearingDeg, d:clamp(distNorm,0,1), s:sig, t:Date.now()});
+  if(RADAR.points.length > 80) RADAR.points = RADAR.points.slice(-80);
+}
+
+function drawRadar(){
+  var rc = RADAR.ctx;
+  if(!rc) return;
+  var sz = RADAR.size, r = sz*0.5, dpr = RADAR.dpr;
+  rc.clearRect(0, 0, sz*dpr, sz*dpr);
+  RADAR.smoothH = lpf(RADAR.smoothH, RADAR.heading, 0.08);
+  var headRad = -RADAR.smoothH * Math.PI / 180;
+
+  rc.save(); rc.scale(dpr, dpr);
+  /* Clip circle */
+  rc.beginPath(); rc.arc(r,r,r*0.96,0,Math.PI*2); rc.clip();
+  rc.fillStyle='rgba(0,0,18,0.72)'; rc.fill();
+
+  /* Rings */
+  [0.25,0.5,0.75,1.0].forEach(function(fr){
+    rc.beginPath(); rc.arc(r,r,RADAR.maxDistPx*fr,0,Math.PI*2);
+    rc.strokeStyle='rgba(0,255,136,'+(fr===1?0.2:0.1)+')';
+    rc.lineWidth=fr===1?1:0.5; rc.stroke();
+  });
+
+  /* Cardinals (rotate with heading = north-up) */
+  rc.save(); rc.translate(r,r); rc.rotate(headRad);
+  ['N','E','S','W'].forEach(function(d,i){
+    var a=i*Math.PI*0.5-Math.PI*0.5;
+    var tx=Math.cos(a)*RADAR.maxDistPx*0.88, ty=Math.sin(a)*RADAR.maxDistPx*0.88;
+    rc.fillStyle=d==='N'?'rgba(255,68,68,.75)':'rgba(0,255,136,.32)';
+    rc.font="500 "+Math.round(sz*0.085)+"px 'Share Tech Mono',monospace";
+    rc.textAlign='center'; rc.textBaseline='middle';
+    rc.fillText(d,tx,ty);
+  });
+  rc.restore();
+
+  /* RED CHAIN — chain lines */
+  var now=Date.now();
+  var alive=RADAR.points.filter(function(p){return (now-p.t)<28000;});
+  if(alive.length>1){
+    rc.save(); rc.translate(r,r); rc.rotate(headRad);
+    rc.beginPath();
+    alive.forEach(function(p,i){
+      var a=p.b*Math.PI/180-Math.PI*0.5;
+      var px2=Math.cos(a)*p.d*RADAR.maxDistPx;
+      var py2=Math.sin(a)*p.d*RADAR.maxDistPx;
+      if(!i) rc.moveTo(px2,py2); else rc.lineTo(px2,py2);
+    });
+    rc.strokeStyle='rgba(255,50,50,0.3)'; rc.lineWidth=1; rc.stroke();
+    rc.restore();
+  }
+
+  /* RED CHAIN — dots */
+  rc.save(); rc.translate(r,r); rc.rotate(headRad);
+  alive.forEach(function(p){
+    var age=(now-p.t)/28000, fa=Math.max(0,1-age);
+    var a=p.b*Math.PI/180-Math.PI*0.5;
+    var px2=Math.cos(a)*p.d*RADAR.maxDistPx;
+    var py2=Math.sin(a)*p.d*RADAR.maxDistPx;
+    var dotR=Math.max(2,sz*0.025)*(0.7+p.s/100*0.3);
+    var rgb=CLV[sigLvl(p.s)].rgb;
+    rc.shadowColor='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',.8)';
+    rc.shadowBlur=5*fa;
+    rc.beginPath(); rc.arc(px2,py2,dotR,0,Math.PI*2);
+    rc.fillStyle='rgba(255,50,50,'+(fa*0.9)+')'; rc.fill();    /* red core */
+    rc.beginPath(); rc.arc(px2,py2,dotR*0.5,0,Math.PI*2);
+    rc.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(fa*0.75)+')'; rc.fill();
+    rc.shadowBlur=0;
+  });
+  rc.restore();
+
+  /* Center cross */
+  rc.save(); rc.translate(r,r);
+  var cs=sz*0.03; rc.strokeStyle='rgba(0,255,136,.5)'; rc.lineWidth=1;
+  rc.beginPath(); rc.moveTo(-cs,0); rc.lineTo(cs,0); rc.stroke();
+  rc.beginPath(); rc.moveTo(0,-cs); rc.lineTo(0,cs); rc.stroke();
+  rc.restore();
+
+  /* FORWARD ARROW — always static, pointing up = user's gaze direction */
+  rc.save(); rc.translate(r,r);
+  var al=sz*0.3, ah=sz*0.055;
+  rc.strokeStyle='rgba(212,175,55,.82)'; rc.lineWidth=1.5; rc.lineCap='round';
+  rc.beginPath(); rc.moveTo(0,0); rc.lineTo(0,-al); rc.stroke();
+  rc.beginPath();
+  rc.moveTo(-ah*0.5,-al+ah); rc.lineTo(0,-al); rc.lineTo(ah*0.5,-al+ah);
+  rc.stroke();
+  rc.restore();
+
+  /* Outer border */
+  rc.beginPath(); rc.arc(r,r,r*0.96,0,Math.PI*2);
+  rc.strokeStyle='rgba(212,175,55,.22)'; rc.lineWidth=1; rc.stroke();
+
+  /* Heading readout */
+  rc.fillStyle='rgba(212,175,55,.65)';
+  rc.font="600 "+Math.round(sz*0.1)+"px 'Share Tech Mono',monospace";
+  rc.textAlign='center'; rc.textBaseline='middle';
+  rc.fillText(Math.round(RADAR.smoothH)+'°', r, sz*0.9);
+
+  rc.restore(); /* dpr scale */
+}
+
+function positionRadar(){
+  var wrap=document.getElementById('radar-wrap');
+  if(!wrap) return;
+  var sbPx=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sb')||'0')||0;
+  wrap.style.bottom=(sbPx+110)+'px';
+  wrap.style.left='14px';
+}
+
 /* ═══ DIRECTIONAL VECTOR BEAM ═══ */
 var vecAngle=0, vecTarget=0;
 
 function drawDirectionalBeam(now,acy){
-  var W=arCanvas.width;
+  var W=CW;
   vecAngle=lerp(vecAngle,vecTarget,0.04);
   var v=S.dSig;
-  var len=Math.min(W,(arCanvas.height-acy))*0.36;
+  var len=Math.min(W,(CH-acy))*0.36;
   var cx=W*0.5;
   var bx=cx+Math.cos(vecAngle)*len;
   var by=acy+Math.sin(vecAngle)*len;
@@ -928,7 +1091,7 @@ function drawDirectionalBeam(now,acy){
 /* ═══ GHOST PEAK ARROW ═══ */
 function drawGhostPeakArrow(acy){
   if(!S.peakSet||S.peak<5) return;
-  var W=arCanvas.width,H=arCanvas.height,cx=W*0.5;
+  var W=CW,H=CH,cx=W*0.5;
   var dx=S.peakPos.x-cx,dy=S.peakPos.y-acy;
   var dist=Math.sqrt(dx*dx+dy*dy);
   if(dist<50) return;
@@ -1004,7 +1167,7 @@ function drawTrail(now){
 
 /* ═══ ORIENT → CANVAS POSITION ═══ */
 function oPos(){
-  var W=arCanvas.width,H=arCanvas.height,fh=frostH();
+  var W=CW,H=CH,fh=frostH();
   var gN=clamp(S.smoothGamma,-82,82);
   var bN=clamp(S.smoothBeta,28,152);
   return{x:W*(gN+82)/164, y:fh+12+(H-fh-70)*(bN-28)/124};
@@ -1108,11 +1271,11 @@ function loop(now){
   if(S.heatmapOn) renderHeatmap();
 
   /* Clear & draw AR */
-  ctx.clearRect(0,0,arCanvas.width,arCanvas.height);
+  ctx.clearRect(0,0,CW,CH);
   var fh=frostH();
-  var camCy=fh+(arCanvas.height-fh)*0.46;
+  var camCy=fh+(CH-fh)*0.46;
   drawTrail(now);
-  if(S.scanning){drawDirectionalBeam(now,camCy);drawGhostPeakArrow(camCy);}
+  if(S.scanning){drawDirectionalBeam(now,camCy);drawGhostPeakArrow(camCy);drawRadar();}
   if(S.scanning) paintDOM();
 }
 
@@ -1161,7 +1324,7 @@ function measure(){
   /* Peak memory */
   if(S.tSig>S.peak){
     S.peak=S.tSig;
-    var pos=S.hasGyro?oPos():{x:arCanvas.width/2,y:frostH()+(arCanvas.height-frostH())*0.44};
+    var pos=S.hasGyro?oPos():{x:CW/2,y:frostH()+(CH-frostH())*0.44};
     S.peakPos={x:pos.x,y:pos.y};
     S.peakSet=true;
     $('f-peak').classList.add('on');
@@ -1169,7 +1332,7 @@ function measure(){
   }
 
   /* Trail dot */
-  var pos=S.hasGyro?oPos():{x:arCanvas.width/2,y:frostH()+(arCanvas.height-frostH())*0.44};
+  var pos=S.hasGyro?oPos():{x:CW/2,y:frostH()+(CH-frostH())*0.44};
   var dist=Math.sqrt(Math.pow(pos.x-S.lastDot.x,2)+Math.pow(pos.y-S.lastDot.y,2));
   if(dist>DOT_DIST||!S.dots.length){
     var isReal=NET.hasRealData;
@@ -1179,8 +1342,11 @@ function measure(){
     /* Add heatmap point */
     hmAddPoint(pos.x,pos.y,S.tSig);
 
-    /* PRO particles */
-    if(S.proUnlocked){
+    /* Add radar point — bearing from compass, dist from gyro beta */
+    var bearing = RADAR.heading;
+    /* Normalise distance: beta 90°=near, 0° or 180°=far */
+    var betaDist = Math.abs(S.orient.beta - 90) / 90;
+    radarAddPoint(bearing, clamp(betaDist * 0.8 + Math.random()*0.2, 0.05, 1), S.tSig);
       for(var i=0;i<7;i++){
         var a=Math.random()*Math.PI*2,sp=0.4+Math.random()*1.1;
         S.parts.push({x:pos.x,y:pos.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.85,
@@ -1213,6 +1379,13 @@ addEventListener('deviceorientation',function(e){
   S.smoothGamma=lpf(S.smoothGamma,e.gamma||0,LP_GYRO);
   S.smoothBeta =lpf(S.smoothBeta, e.beta||90, LP_GYRO);
   S.orient.alpha=e.alpha||0;S.orient.beta=e.beta||0;S.orient.gamma=e.gamma||0;
+
+  /* Feed compass heading (alpha=0 = North on most devices) */
+  var heading = e.webkitCompassHeading != null
+    ? e.webkitCompassHeading          /* iOS true-north compass */
+    : (e.alpha || 0);                 /* Android alpha (magnetic) */
+  RADAR.heading = heading;
+
   if(!S.scanning)return;
   var dg=Math.abs((e.gamma||0)-S.orient.gamma);
   if(dg>4&&!NET.hasRealData) S.base=clamp(S.base+(Math.random()-0.5)*24,10,90);
@@ -1226,6 +1399,7 @@ function startScan(){
   S.dots=[];S.parts=[];S.lastDot={x:-9999,y:-9999};
   S.sSig=S.base;S.sPing=S.basePing;S.tSig=S.base;S.dSig=S.base;
   S.peak=0;S.peakSet=false;S.hmPoints=[];S.hmDirty=true;
+  RADAR.points=[];   /* reset red chain */
   $('f-peak').classList.remove('on');
 
   /* Initial real data read */
@@ -1238,6 +1412,7 @@ function startScan(){
   $('f-status').textContent=NET.hasRealData?'LIVE DATA':'SCANNING';
   $('legbox').classList.add('on');$('status-txt').classList.add('on');
   $('hm-toggle').classList.add('on');
+  document.getElementById('radar-wrap').classList.add('on');
 
   measure();
   S.scanIv=setInterval(measure,SCAN_MS);
@@ -1252,6 +1427,7 @@ function stopScan(){
   if(S.hapticIv)clearInterval(S.hapticIv);
   $('btn').textContent='⬡  Scan Starten  ⬡';$('btn').classList.remove('scanning');
   $('f-status').textContent='PAUSIERT';
+  document.getElementById('radar-wrap').classList.remove('on');
 }
 
 /* ═══ CAMERA ═══ */
@@ -1274,14 +1450,19 @@ function positionUI(){
   var fh=frostH();
   var sbPx=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sb')||'0')||0;
   $('status-txt').style.bottom=(sbPx+110)+'px';
+  /* Shift scan button right to leave room for radar */
   $('btn').style.bottom=(sbPx+52)+'px';
-  $('hm-toggle').style.bottom=(sbPx+52)+'px';
+  $('btn').style.left='50%';
+  $('hm-toggle').style.bottom=(sbPx+90)+'px';
   $('hm-toggle').style.left='14px';
-  $('f-set').style.bottom=(sbPx+90)+'px';$('f-set').style.left='14px';
+  $('f-set').style.bottom=(sbPx+130)+'px';$('f-set').style.left='14px';
   $('f-pro').style.bottom=(sbPx+54)+'px';$('f-pro').style.right='14px';
   $('f-peak').style.top=(fh+12)+'px';$('f-peak').style.right='12px';
   $('legbox').style.top=(fh+56)+'px';$('legbox').style.right='12px';
   $('real-badge').style.top=(fh+12)+'px';$('real-badge').style.left='12px';
+  /* Radar: bottom-left */
+  initRadar();
+  positionRadar();
 }
 
 /* ═══ FLOW ═══ */
@@ -1460,19 +1641,26 @@ function drawIntroWifi(cx, cy, r, col, alpha, glowStrength){
 /* ── Generate fragments for dissolve ── */
 function generateFragments(){
   INTRO.fragments = [];
-  var count = 80;
+  var count = 120;  /* More particles for richer dissolve */
   for(var i = 0; i < count; i++){
-    var angle = Math.random() * Math.PI * 2;
-    var dist  = 20 + Math.random() * Math.min(INTRO.W, INTRO.H) * 0.45;
+    var angle  = Math.random() * Math.PI * 2;
+    var speed  = 0.8 + Math.random() * 3.2;
+    /* Burst from the WiFi symbol paths */
+    var spawnR = (Math.random() < 0.7)
+      ? [1, 0.64, 0.36][Math.floor(Math.random()*3)] * (Math.min(INTRO.W,INTRO.H)*0.46)
+      : 0;
+    var spawnA = Math.random() * Math.PI + Math.PI*0.17; /* arc angle range */
     INTRO.fragments.push({
-      x: INTRO.cx + Math.cos(angle) * dist * 0.3,
-      y: INTRO.cy + Math.sin(angle) * dist * 0.3,
-      tx: INTRO.cx + Math.cos(angle) * dist,   /* target x */
-      ty: INTRO.cy + Math.sin(angle) * dist,   /* target y */
-      r: 2 + Math.random() * 5,
-      col: Math.random() > 0.5 ? '#d4af37' : (Math.random() > 0.5 ? '#00ff88' : '#00c8ff'),
-      alpha: 0.6 + Math.random() * 0.4,
-      speed: 0.4 + Math.random() * 0.6,
+      x:  INTRO.cx + Math.cos(spawnA) * spawnR * (Math.random()>0.5?1:-1),
+      y:  INTRO.cy + Math.sin(spawnA) * spawnR * 0.4,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.6, /* slight upward bias */
+      life:  0.85 + Math.random() * 0.15,
+      decay: 0.012 + Math.random() * 0.022,
+      size:  1.5 + Math.random() * 3.5,
+      /* Signal-Gold + accents */
+      col:   Math.random() < 0.6 ? 'ffd700'
+           : Math.random() < 0.5 ? '00ff88' : '00c8ff',
     });
   }
 }
@@ -1708,22 +1896,29 @@ function introLoop(now){
       c.restore();
     }
 
-    /* Dissolve fragments fly outward */
-    if(INTRO.fragments.length > 0){
-      for(var fi = 0; fi < INTRO.fragments.length; fi++){
-        var f = INTRO.fragments[fi];
-        var fp = Math.min(pt * f.speed * 1.4, 1);
-        var fx = lerp(f.x, f.tx, easeOut(fp));
-        var fy = lerp(f.y, f.ty, easeOut(fp));
-        var fa = f.alpha * Math.max(0, 1 - fp * 1.3);
-        if(fa <= 0) continue;
-        c.beginPath(); c.arc(fx, fy, f.r * (1-fp*0.4), 0, Math.PI*2);
-        c.fillStyle = f.col;
-        c.globalAlpha = fa;
-        c.fill();
-        c.globalAlpha = 1;
-      }
-    }
+    /* ── Physics-based fragment dissolve ── */
+    /* Advance physics (only while alive) */
+    INTRO.fragments = INTRO.fragments.filter(function(f){ return f.life > 0; });
+    INTRO.fragments.forEach(function(f){
+      f.x  += f.vx;
+      f.y  += f.vy;
+      f.vy += 0.045;   /* gravity */
+      f.vx *= 0.98;    /* air drag */
+      f.life -= f.decay;
+      if(f.life <= 0) return;
+
+      /* Glow halo */
+      c.save();
+      c.shadowColor = '#'+f.col;
+      c.shadowBlur  = 6 * f.life;
+      c.fillStyle   = 'rgba(255,215,0,'+( f.life * 0.55 )+')'; /* Signal-Gold */
+      c.fillRect(f.x - f.size*0.5, f.y - f.size*0.5, f.size, f.size);
+      /* Accent color overlay */
+      c.fillStyle   = '#' + f.col;
+      c.globalAlpha = f.life * 0.85;
+      c.fillRect(f.x - f.size*0.4, f.y - f.size*0.4, f.size*0.8, f.size*0.8);
+      c.restore();
+    });
 
     /* Iris: black overlay with expanding circular cutout */
     var irisR = INTRO.irisMax * easeInOut(Math.min(pt * 1.05, 1));
@@ -1748,8 +1943,15 @@ function startIntro(){
   var ic = document.getElementById('intro-canvas');
   INTRO.canvas = ic;
   INTRO.ctx    = ic.getContext('2d');
-  INTRO.W = ic.width  = window.innerWidth;
-  INTRO.H = ic.height = window.innerHeight;
+  var dpr = window.devicePixelRatio || 1;
+  INTRO.W = window.innerWidth;
+  INTRO.H = window.innerHeight;
+  ic.width  = Math.round(INTRO.W * dpr);
+  ic.height = Math.round(INTRO.H * dpr);
+  ic.style.width  = INTRO.W + 'px';
+  ic.style.height = INTRO.H + 'px';
+  INTRO.ctx.setTransform(1,0,0,1,0,0);
+  INTRO.ctx.scale(dpr, dpr);
   INTRO.cx = INTRO.W / 2;
   INTRO.cy = INTRO.H * 0.48; /* Slightly below center */
   INTRO.irisMax = Math.sqrt(INTRO.W * INTRO.W + INTRO.H * INTRO.H) * 0.62;
@@ -1823,6 +2025,7 @@ window.closeSettings=function(){$('settings').classList.remove('on');};
 window.deleteData=function(){
   localStorage.clear();S.dots=[];S.parts=[];S.proUnlocked=false;
   S.peak=0;S.peakSet=false;S.hmPoints=[];S.hmDirty=true;
+  RADAR.points=[];
   hmCtx.clearRect(0,0,hmCanvas.width,hmCanvas.height);
   alert('Alle lokalen Daten gelöscht. (DSGVO Art. 17)');
   window.closeSettings();window.closePro();
@@ -1846,64 +2049,6 @@ document.addEventListener('touchend',function(e){var n=Date.now();if(n-_lt<320)e
   if(localStorage.getItem('wps_consent')==='1'){$('consent').style.display='none';showSplash();}
 })();
 
-})();
-</script>
-</body>
-</html>
-<!-- Dieser Block repariert das Intro und aktiviert die V-Sicht -->
-<script>
-(function() {
-    // Falls die Variablen noch fehlen
-    if (typeof S === 'undefined') window.S = { currentHeading: 0, hmPoints: [] };
-
-    // 1. ZÜNDUNG: Klick startet das Intro/Kamera
-    const startApp = () => {
-        const intro = document.querySelector('.intro-layer') || document.body;
-        // Wir erzwingen das Ausblenden des Text-Salats, falls noch da
-        document.body.style.color = "transparent"; 
-        setTimeout(() => document.body.style.color = "", 100);
-        
-        console.log("Wipulscan gestartet...");
-    };
-    document.addEventListener('click', startApp, {once: true});
-
-    // 2. KOMPASS-FIX (iPhone Vorwärts-Sicht)
-    window.addEventListener('deviceorientation', function(e) {
-        let heading = e.webkitCompassHeading || e.alpha;
-        if (heading) S.currentHeading = heading;
-    }, true);
-
-    // 3. RADAR-LOGIK (Dein Vegan-Symbol Style)
-    window.drawDirectionalRadar = function() {
-        const canvas = document.getElementById('radarCanvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Dein Sichtfeld-Indikator
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate((-S.currentHeading) * Math.PI / 180);
-
-        // Die rote Kette (Messpunkte)
-        S.hmPoints.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.relX, p.relY, 4, 0, Math.PI * 2);
-            ctx.fillStyle = "red";
-            ctx.fill();
-        });
-        ctx.restore();
-    };
-
-    // Loop starten
-    const tick = () => {
-        if(typeof drawDirectionalRadar === 'function') drawDirectionalRadar();
-        requestAnimationFrame(tick);
-    };
-    tick();
 })();
 </script>
 </body>

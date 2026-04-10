@@ -347,7 +347,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
 <div id="intro">
   <canvas id="intro-canvas"></canvas>
   <div id="iris"></div>
-  <button id="intro-skip" onclick="skipIntro()">SKIP ›</button>
+  <button id="intro-skip" onclick="skipIntro()">ÜBERSPRINGEN ›</button>
 </div>
 
 <!-- CONSENT -->
@@ -511,7 +511,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
 </div>
 
 <!-- Floating UI -->
-<div id="real-badge">◈ REAL DATA</div>
+<div id="real-badge">◈ ECHTDATEN</div>
 <div id="status-txt"></div>
 <button id="btn" onclick="toggleScan()">⬡ &nbsp; Scan Starten &nbsp; ⬡</button>
 <div id="hm-toggle" onclick="toggleHeatmap()">⬡ HEATMAP</div>
@@ -751,7 +751,7 @@ function readNetworkAPI(){
 
   /* Update settings display */
   var st=document.getElementById('st-netapi');
-  if(st) st.textContent='Type: '+NET.effectiveType+' · RTT: '+NET.rtt+'ms · DL: '+NET.downlink+'Mbps · saveData: '+(NET.saveData?'yes':'no');
+  if(st) st.textContent='Type: '+NET.effectiveType+' · RTT: '+NET.rtt+'ms · DL: '+NET.downlink+'Mbps · saveData: '+(NET.saveData?'ja':'nein');
 
   return base;
 }
@@ -938,7 +938,7 @@ function drawRadar(){
 
   /* Cardinals (rotate with heading = north-up) */
   rc.save(); rc.translate(r,r); rc.rotate(headRad);
-  ['N','E','S','W'].forEach(function(d,i){
+  ['N','O','S','W'].forEach(function(d,i){
     var a=i*Math.PI*0.5-Math.PI*0.5;
     var tx=Math.cos(a)*RADAR.maxDistPx*0.88, ty=Math.sin(a)*RADAR.maxDistPx*0.88;
     rc.fillStyle=d==='N'?'rgba(255,68,68,.75)':'rgba(0,255,136,.32)';
@@ -1082,7 +1082,7 @@ function drawDirectionalBeam(now,acy){
     if(NET.hasRealData){
       ctx.font="8px 'Share Tech Mono',monospace";
       ctx.fillStyle='rgba(0,255,136,.6)';
-      ctx.fillText(NET.measuredPing>0?NET.measuredPing+'ms REAL':'LIVE',lx,ly+18);
+      ctx.fillText(NET.measuredPing>0?NET.measuredPing+'ms ECHT':'LIVE',lx,ly+18);
     }
     ctx.restore();
   }
@@ -1146,7 +1146,7 @@ function drawTrail(now){
     if(d.real){
       ctx.fillStyle='rgba(0,255,136,'+(aa*0.55)+')';
       ctx.font="7px 'Share Tech Mono',monospace";
-      ctx.fillText('REAL',d.x,d.y-R*0.9);
+      ctx.fillText('ECHT',d.x,d.y-R*0.9);
     }
   }
   S.dots=S.dots.filter(function(d){return(now-d.t)<DOT_LIFE;});
@@ -1194,16 +1194,16 @@ var $=function(id){return document.getElementById(id);};
 function paintDOM(){
   var v=S.dSig,lv=sigLvl(v),co=CLV[lv],hex=co.hex,sig=Math.round(v);
   $('mv-s').innerHTML=sig+'<span class="f-mu">%</span>';
-  $('ms-s').textContent=sig>=75?'Exzellent':sig>=55?'Gut':sig>=30?'Mittel':'Schwach';
+  $('ms-s').textContent=sig>=75?'Ausgezeichnet':sig>=55?'Gut':sig>=30?'Mittel':'Schwach';
 
   var dbm=Math.round(S.dDBm);
   $('mv-d').innerHTML=dbm+'<span class="f-mu">dBm</span>';
-  $('ms-d').textContent=dbm>=-50?'Excellent':dbm>=-65?'Good':dbm>=-75?'Fair':'Poor';
+  $('ms-d').textContent=dbm>=-50?'Ausgezeichnet':dbm>=-65?'Gut':dbm>=-75?'Akzeptabel':'Schlecht';
   $('mv-d').style.color=dbm>=-60?'#00ff88':dbm>=-75?'#d4af37':'#ff3333';
 
   var snr=Math.round(S.dSNR);
   $('mv-n').innerHTML=snr+'<span class="f-mu">dB</span>';
-  $('ms-n').textContent=snr>=25?'SNR OK':snr>=15?'Rauschen':'High Noise';
+  $('ms-n').textContent=snr>=25?'SNR OK':snr>=15?'Rauschen':'Starkes Rauschen';
   $('mv-n').style.color=snr>=25?'#00ff88':snr>=15?'#d4af37':'#ff3333';
 
   /* Prefer real measured ping */
@@ -1211,7 +1211,7 @@ function paintDOM(){
   var pingLabel=NET.measuredPing>0?(NET.measuredPing+'ms'):pg+'ms';
   $('mv-p').innerHTML=(NET.measuredPing>0?NET.measuredPing:pg)+'<span class="f-mu">ms</span>';
   $('ms-p').textContent=(NET.measuredPing>0?'GEMESSEN ':'')+
-    (pg<30?'Excellent':pg<80?'Good':pg<150?'Moderate':'High');
+    (pg<30?'Ausgezeichnet':pg<80?'Gut':pg<150?'Mittel':'Hoch');
   $('mv-p').style.color=pg<30?'#00ff88':pg<80?'#d4af37':'#ff3333';
 
   /* Bars */
@@ -1411,7 +1411,7 @@ function startScan(){
   S.pingIv=setInterval(measureRealPing,PING_MS);
 
   $('btn').textContent='⬡  Scan Stoppen  ⬡';$('btn').classList.add('scanning');
-  $('f-status').textContent=NET.hasRealData?'LIVE DATA':'SCANNING';
+  $('f-status').textContent=NET.hasRealData?'LIVE-DATEN':'SCANNING';
   $('legbox').classList.add('on');$('status-txt').classList.add('on');
   $('hm-toggle').classList.add('on');
   document.getElementById('radar-wrap').classList.add('on');
@@ -1477,527 +1477,420 @@ window.acceptConsent=function(){
 };
 
 /* ═══════════════════════════════════════════════════════════
-   CINEMATIC LAUNCH ENGINE · WIPULSCAN PRO v5.1
-   Sequence: BlackOut → WiFi Eruption → 2× Pulse+Sound →
-             Title Drop → Iris Reveal → Auto-Scan
+   CINEMATIC INTRO ENGINE v2 · WIPULSCAN PRO
+   Ablauf: Schwarz → WiFi-Eruption → 2× Puls+Sound →
+           Titel-Drop → Iris-Reveal → Auto-Scan
 ═══════════════════════════════════════════════════════════ */
 
-var INTRO = {
-  canvas: null, ctx: null,
-  W: 0, H: 0, cx: 0, cy: 0,
-  raf: null,
-  phase: 0,       /* 0=blackout 1=eruption 2=pulse1 3=pulse2 4=title 5=iris 6=done */
-  t: 0,           /* phase-local timer (0..1) */
-  tAbs: 0,        /* absolute ms since phase start */
-  phaseStart: 0,
-  logoScale: 0,   /* 0=invisible 1=full screen */
-  logoAlpha: 0,
-  pulseRing: 0,   /* 0..1 expansion */
-  pulseAlpha: 0,
-  titleAlpha: 0,
-  titleY: 0,      /* 0=offscreen 1=in place */
-  subtitleAlpha: 0,
-  irisRadius: 0,  /* 0=fully covered, max=fully open */
-  irisMax: 0,
-  fragments: [],  /* logo dissolve particles */
-  audioCtx: null,
+/* ── State ── */
+var CI = {
+  running: false,
   skipped: false,
+  raf: null,
+  ctx: null,
+  W: 0, H: 0,
+  start: 0,
+  bassPlayed: false,
+  sonarPlayed: false,
+  ac: null,
 };
 
-/* Timing (ms) for each phase */
-var INTRO_T = {
-  blackout:  600,
-  eruption: 900,
-  gap1:     220,
-  pulse1:   550,
-  gap2:     160,
-  pulse2:   550,
-  gap3:     280,
-  title:    700,
-  hold:     500,
-  iris:     1100,
+/* Laufzeiten der Phasen (ms) */
+var CIT = {
+  blackout:  500,
+  erupt:     900,
+  gap1:      200,
+  pulse1:    500,
+  gap2:      150,
+  pulse2:    500,
+  gap3:      260,
+  titledrop: 650,
+  hold:      480,
+  iris:     1000,
 };
 
-/* ── WebAudio synthesis ── */
-function introAudio(){
+/* Absolute Startzeitpunkte der Phasen */
+var CIP = {};
+function cisBuild(){
+  var t = 0;
+  ['blackout','erupt','gap1','pulse1','gap2','pulse2','gap3','titledrop','hold','iris'].forEach(function(k){
+    CIP[k] = t; t += CIT[k];
+  });
+  CIP.total = t;
+}
+
+/* ── Audio ── */
+function ciAudio(){
   try{
-    var AC = window.AudioContext || window.webkitAudioContext;
-    INTRO.audioCtx = new AC();
-  }catch(e){ return; }
+    var A = window.AudioContext || window.webkitAudioContext;
+    CI.ac = new A();
+  }catch(e){}
 }
 
-function playBassPulse(){
-  if(!INTRO.audioCtx) return;
-  var ac = INTRO.audioCtx;
-  if(ac.state === 'suspended') ac.resume();
-  var now = ac.currentTime;
-
-  /* Deep sub-bass thud */
-  var osc = ac.createOscillator();
-  var gain = ac.createGain();
-  var comp = ac.createDynamicsCompressor();
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(60, now);
-  osc.frequency.exponentialRampToValueAtTime(28, now + 0.4);
-
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.7, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-
-  osc.connect(gain); gain.connect(comp); comp.connect(ac.destination);
-  osc.start(now); osc.stop(now + 0.6);
-
-  /* Harmonic layer */
-  var osc2 = ac.createOscillator();
-  var g2   = ac.createGain();
-  osc2.type = 'triangle';
-  osc2.frequency.setValueAtTime(120, now);
-  osc2.frequency.exponentialRampToValueAtTime(55, now + 0.3);
-  g2.gain.setValueAtTime(0.18, now);
-  g2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-  osc2.connect(g2); g2.connect(ac.destination);
-  osc2.start(now); osc2.stop(now + 0.45);
+function ciBass(){
+  if(!CI.ac) return;
+  try{
+    if(CI.ac.state === 'suspended') CI.ac.resume();
+    var now = CI.ac.currentTime;
+    var o = CI.ac.createOscillator();
+    var g = CI.ac.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(55, now);
+    o.frequency.exponentialRampToValueAtTime(28, now+0.45);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.65, now+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, now+0.55);
+    o.connect(g); g.connect(CI.ac.destination);
+    o.start(now); o.stop(now+0.6);
+    /* Oberton */
+    var o2 = CI.ac.createOscillator(), g2 = CI.ac.createGain();
+    o2.type = 'triangle';
+    o2.frequency.setValueAtTime(110, now);
+    o2.frequency.exponentialRampToValueAtTime(55, now+0.3);
+    g2.gain.setValueAtTime(0.18, now);
+    g2.gain.exponentialRampToValueAtTime(0.001, now+0.4);
+    o2.connect(g2); g2.connect(CI.ac.destination);
+    o2.start(now); o2.stop(now+0.45);
+  }catch(e){}
 }
 
-function playSonarPing(){
-  if(!INTRO.audioCtx) return;
-  var ac = INTRO.audioCtx;
-  if(ac.state === 'suspended') ac.resume();
-  var now = ac.currentTime;
-
-  /* High-frequency sonar */
-  var osc = ac.createOscillator();
-  var gain = ac.createGain();
-  var filter = ac.createBiquadFilter();
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(1800, now);
-  osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
-
-  filter.type = 'bandpass';
-  filter.frequency.value = 1400;
-  filter.Q.value = 3;
-
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.55, now + 0.015);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-  osc.connect(filter); filter.connect(gain); gain.connect(ac.destination);
-  osc.start(now); osc.stop(now + 0.5);
-
-  /* Reverb tail — delayed echo */
-  var echo = ac.createOscillator();
-  var eg   = ac.createGain();
-  echo.type = 'sine';
-  echo.frequency.setValueAtTime(880, now + 0.08);
-  echo.frequency.exponentialRampToValueAtTime(440, now + 0.35);
-  eg.gain.setValueAtTime(0, now + 0.08);
-  eg.gain.linearRampToValueAtTime(0.18, now + 0.1);
-  eg.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-  echo.connect(eg); eg.connect(ac.destination);
-  echo.start(now + 0.08); echo.stop(now + 0.55);
+function ciSonar(){
+  if(!CI.ac) return;
+  try{
+    if(CI.ac.state === 'suspended') CI.ac.resume();
+    var now = CI.ac.currentTime;
+    var o = CI.ac.createOscillator();
+    var g = CI.ac.createGain();
+    var f = CI.ac.createBiquadFilter();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(1760, now);
+    o.frequency.exponentialRampToValueAtTime(880, now+0.28);
+    f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 3;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.5, now+0.012);
+    g.gain.exponentialRampToValueAtTime(0.001, now+0.42);
+    o.connect(f); f.connect(g); g.connect(CI.ac.destination);
+    o.start(now); o.stop(now+0.48);
+    /* Echo */
+    var o3 = CI.ac.createOscillator(), g3 = CI.ac.createGain();
+    o3.type = 'sine';
+    o3.frequency.setValueAtTime(880, now+0.07);
+    o3.frequency.exponentialRampToValueAtTime(440, now+0.32);
+    g3.gain.setValueAtTime(0, now+0.07);
+    g3.gain.linearRampToValueAtTime(0.16, now+0.09);
+    g3.gain.exponentialRampToValueAtTime(0.001, now+0.48);
+    o3.connect(g3); g3.connect(CI.ac.destination);
+    o3.start(now+0.07); o3.stop(now+0.52);
+  }catch(e){}
 }
 
-/* ── WiFi logo draw (on intro canvas) ── */
-function drawIntroWifi(cx, cy, r, col, alpha, glowStrength){
-  var c = INTRO.ctx;
-  if(alpha <= 0 || r <= 4) return;
-  c.save();
-  c.globalAlpha = alpha;
-
-  var a0 = Math.PI + Math.PI * 0.17;
-  var a1 = 2 * Math.PI - Math.PI * 0.17;
-  var arcs = [{r:r, sw:r*0.145}, {r:r*0.64, sw:r*0.115}, {r:r*0.36, sw:r*0.09}];
-
-  for(var i = 0; i < arcs.length; i++){
-    var ar = arcs[i];
-    /* Glow */
-    c.save();
-    c.filter = 'blur('+(glowStrength * ar.r * 0.06)+'px)';
-    c.beginPath(); c.arc(cx, cy, ar.r, a0, a1);
-    c.strokeStyle = col; c.lineWidth = ar.sw * 2.2; c.lineCap = 'round'; c.stroke();
-    c.restore();
-    /* Main */
-    c.beginPath(); c.arc(cx, cy, ar.r, a0, a1);
-    c.strokeStyle = col; c.lineWidth = ar.sw; c.lineCap = 'round'; c.stroke();
-    /* Inner sheen */
-    c.beginPath(); c.arc(cx, cy, ar.r, a0, a1);
-    var sh = c.createLinearGradient(cx - ar.r, cy, cx + ar.r, cy);
-    sh.addColorStop(0,'rgba(255,255,255,0)'); sh.addColorStop(0.44,'rgba(255,255,255,.3)');
-    sh.addColorStop(0.56,'rgba(255,255,255,.12)'); sh.addColorStop(1,'rgba(255,255,255,0)');
-    c.strokeStyle = sh; c.lineWidth = ar.sw * 0.4; c.lineCap = 'round'; c.stroke();
-  }
-
-  /* Dot */
-  var dy = cy + r * 0.61;
-  var dr = r * 0.1;
-  c.save(); c.filter = 'blur('+(glowStrength * r * 0.04)+'px)';
-  c.beginPath(); c.arc(cx, dy, dr * 2.5, 0, Math.PI*2); c.fillStyle = col; c.fill();
-  c.restore();
-  c.beginPath(); c.arc(cx, dy, dr, 0, Math.PI*2); c.fillStyle = col; c.fill();
-
-  c.restore();
-}
-
-/* ── Generate fragments for dissolve ── */
-function generateFragments(){
-  INTRO.fragments = [];
-  var count = 120;  /* More particles for richer dissolve */
-  for(var i = 0; i < count; i++){
-    var angle  = Math.random() * Math.PI * 2;
-    var speed  = 0.8 + Math.random() * 3.2;
-    /* Burst from the WiFi symbol paths */
-    var spawnR = (Math.random() < 0.7)
-      ? [1, 0.64, 0.36][Math.floor(Math.random()*3)] * (Math.min(INTRO.W,INTRO.H)*0.46)
-      : 0;
-    var spawnA = Math.random() * Math.PI + Math.PI*0.17; /* arc angle range */
-    INTRO.fragments.push({
-      x:  INTRO.cx + Math.cos(spawnA) * spawnR * (Math.random()>0.5?1:-1),
-      y:  INTRO.cy + Math.sin(spawnA) * spawnR * 0.4,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 0.6, /* slight upward bias */
-      life:  0.85 + Math.random() * 0.15,
-      decay: 0.012 + Math.random() * 0.022,
-      size:  1.5 + Math.random() * 3.5,
-      /* Signal-Gold + accents */
-      col:   Math.random() < 0.6 ? 'ffd700'
-           : Math.random() < 0.5 ? '00ff88' : '00c8ff',
-    });
-  }
-}
-
-/* ── easing ── */
-function easeOut(t){ return 1 - Math.pow(1-t, 3); }
-function easeInOut(t){ return t<0.5 ? 2*t*t : -1+(4-2*t)*t; }
-function easeElastic(t){
-  if(t===0||t===1) return t;
+/* ── Easing ── */
+function ciEaseOut3(t){ return 1-Math.pow(1-t,3); }
+function ciEaseInOut(t){ return t<0.5?2*t*t:-1+(4-2*t)*t; }
+function ciElastic(t){
+  if(t<=0||t>=1) return t;
   return Math.pow(2,-10*t)*Math.sin((t*10-0.75)*(2*Math.PI)/3)+1;
 }
 
-/* ── PHASE RUNNER ── */
-var introPhaseQueue = []; /* pre-computed phase schedule */
-var introStartTime = 0;
-var introPhaseTimes = {}; /* absolute ms start of each named phase */
-
-function buildSchedule(){
-  var T = INTRO_T;
-  var t = 0;
-  introPhaseTimes.blackout  = t; t += T.blackout;
-  introPhaseTimes.eruption  = t; t += T.eruption;
-  introPhaseTimes.gap1      = t; t += T.gap1;
-  introPhaseTimes.pulse1    = t; t += T.pulse1;  /* bass */
-  introPhaseTimes.gap2      = t; t += T.gap2;
-  introPhaseTimes.pulse2    = t; t += T.pulse2;  /* sonar */
-  introPhaseTimes.gap3      = t; t += T.gap3;
-  introPhaseTimes.title     = t; t += T.title;
-  introPhaseTimes.hold      = t; t += T.hold;
-  introPhaseTimes.iris      = t; t += T.iris;
-  introPhaseTimes.total     = t;
+/* ── WiFi-Symbol zeichnen ── */
+function ciWifi(cx, cy, maxR, col, alpha, glow){
+  if(alpha<=0||maxR<2) return;
+  var c = CI.ctx;
+  var a0 = Math.PI+Math.PI*0.168, a1 = 2*Math.PI-Math.PI*0.168;
+  var arcs = [{r:maxR,sw:maxR*0.14},{r:maxR*0.63,sw:maxR*0.11},{r:maxR*0.35,sw:maxR*0.088}];
+  c.save();
+  c.globalAlpha = alpha;
+  arcs.forEach(function(ar){
+    /* Glühen */
+    c.save();
+    c.shadowColor = col;
+    c.shadowBlur  = glow * ar.r * 0.12;
+    c.beginPath(); c.arc(cx,cy,ar.r,a0,a1);
+    c.strokeStyle = col; c.lineWidth = ar.sw*0.55; c.lineCap='round'; c.stroke();
+    c.restore();
+    /* Hauptlinie */
+    c.beginPath(); c.arc(cx,cy,ar.r,a0,a1);
+    c.strokeStyle = col; c.lineWidth = ar.sw; c.lineCap='round'; c.stroke();
+    /* Glanzstreifen */
+    c.save();
+    var sg = c.createLinearGradient(cx-ar.r,cy,cx+ar.r,cy);
+    sg.addColorStop(0,'rgba(255,255,255,0)');
+    sg.addColorStop(0.44,'rgba(255,255,255,0.25)');
+    sg.addColorStop(0.56,'rgba(255,255,255,0.08)');
+    sg.addColorStop(1,'rgba(255,255,255,0)');
+    c.beginPath(); c.arc(cx,cy,ar.r,a0,a1);
+    c.strokeStyle = sg; c.lineWidth = ar.sw*0.35; c.lineCap='round'; c.stroke();
+    c.restore();
+  });
+  /* Punkt */
+  var dy = cy + maxR*0.62;
+  var dr = maxR*0.115;
+  c.save();
+  c.shadowColor = col; c.shadowBlur = glow*dr*1.5;
+  c.beginPath(); c.arc(cx,dy,dr,0,Math.PI*2);
+  c.fillStyle = col; c.fill();
+  c.restore();
+  /* Glanzfleck auf Punkt */
+  c.beginPath();
+  c.ellipse(cx-dr*0.28,dy-dr*0.26,dr*0.38,dr*0.25,-Math.PI*0.18,0,Math.PI*2);
+  c.fillStyle='rgba(255,255,255,0.28)'; c.fill();
+  c.restore();
 }
 
-/* ── MAIN INTRO LOOP ── */
-var bassPlayed = false, sonarPlayed = false, titleDropped = false;
+/* ── Fragmente ── */
+var ciFrags = [];
+function ciGenFrags(cx,cy,maxR){
+  ciFrags = [];
+  var cols = ['#d4af37','#f5e070','#00ff88','#00c8ff'];
+  for(var i=0;i<100;i++){
+    var a=Math.random()*Math.PI*2;
+    var sp=1.2+Math.random()*3.8;
+    ciFrags.push({
+      x:cx, y:cy,
+      vx:Math.cos(a)*sp,
+      vy:Math.sin(a)*sp-(0.5+Math.random()*1.5),
+      life:1,
+      decay:0.013+Math.random()*0.022,
+      size:1.2+Math.random()*3.8,
+      col:cols[Math.floor(Math.random()*cols.length)],
+    });
+  }
+}
 
-function introLoop(now){
-  if(INTRO.skipped) return;
-  INTRO.raf = requestAnimationFrame(introLoop);
+/* ── Haupt-Loop ── */
+function ciLoop(now){
+  if(CI.skipped) return;
+  CI.raf = requestAnimationFrame(ciLoop);
 
-  var elapsed = now - introStartTime;
-  var T = INTRO_T;
-  var c = INTRO.ctx;
-  var W = INTRO.W, H = INTRO.H, cx = INTRO.cx, cy = INTRO.cy;
+  var c = CI.ctx;
+  var W = CI.W, H = CI.H;
+  var elapsed = now - CI.start;
+  var cx = W*0.5, cy = H*0.48;
+  var maxR = Math.min(W,H)*0.44;
 
-  c.clearRect(0, 0, W, H);
+  /* Hintergrund: immer schwarz */
+  c.clearRect(0,0,W,H);
+  c.fillStyle='#000';
+  c.fillRect(0,0,W,H);
 
-  /* ── Background always black ── */
-  c.fillStyle = '#000000';
-  c.fillRect(0, 0, W, H);
-
-  var maxR = Math.min(W, H) * 0.46;
-
-  /* ──────────────────────────────
-     PHASE: ERUPTION
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.eruption && elapsed < introPhaseTimes.gap1){
-    var pt = (elapsed - introPhaseTimes.eruption) / T.eruption;
-    var scale = easeElastic(Math.min(pt, 1));
-    var r = maxR * scale;
-    var glow = 0.6 + scale * 0.4;
-    drawIntroWifi(cx, cy, r, '#d4af37', Math.min(scale * 1.6, 1), glow);
-    INTRO.logoScale = scale;
-    INTRO.logoAlpha = Math.min(scale * 1.6, 1);
+  /* ── PHASE: ERUPTION ── */
+  if(elapsed >= CIP.erupt && elapsed < CIP.gap1){
+    var pt = (elapsed-CIP.erupt)/CIT.erupt;
+    var s  = ciElastic(Math.min(pt,1));
+    ciWifi(cx,cy,maxR*s,'#d4af37',Math.min(s*1.8,1),s);
   }
 
-  /* ──────────────────────────────
-     PHASE: GAP1 (logo holds)
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.gap1 && elapsed < introPhaseTimes.pulse1){
-    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+  /* ── GAP1: Logo hält ── */
+  if(elapsed >= CIP.gap1 && elapsed < CIP.pulse1){
+    ciWifi(cx,cy,maxR,'#d4af37',1,1);
   }
 
-  /* ──────────────────────────────
-     PHASE: PULSE 1 — BASS (neon green)
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.pulse1 && elapsed < introPhaseTimes.gap2){
-    if(!bassPlayed){ playBassPulse(); bassPlayed = true; }
-    var pt = (elapsed - introPhaseTimes.pulse1) / T.pulse1;
-    /* Color flash: gold → neon green → back */
-    var flashT = Math.sin(pt * Math.PI);
-    var r2 = Math.round(lerp(212, 0, flashT));
-    var g2 = Math.round(lerp(175, 255, flashT));
-    var b2 = Math.round(lerp(55, 136, flashT));
-    var pCol = 'rgb('+r2+','+g2+','+b2+')';
-    var glow2 = 1 + flashT * 2.5;
-    drawIntroWifi(cx, cy, maxR, pCol, 1, glow2);
-
-    /* Expanding ring */
-    var ringR = maxR * (1 + pt * 0.65);
-    var ringA = (1 - pt) * 0.7;
-    c.beginPath(); c.arc(cx, cy, ringR, 0, Math.PI*2);
-    c.strokeStyle = 'rgba('+r2+','+g2+','+b2+','+ringA+')';
-    c.lineWidth = 6 * (1-pt); c.stroke();
-
-    /* Second outer ring */
-    var ringR2 = maxR * (1 + pt * 1.1);
-    var ringA2 = (1 - pt) * 0.35;
-    c.beginPath(); c.arc(cx, cy, ringR2, 0, Math.PI*2);
-    c.strokeStyle = 'rgba('+r2+','+g2+','+b2+','+ringA2+')';
-    c.lineWidth = 3 * (1-pt); c.stroke();
-
-    /* Screen flash */
-    c.fillStyle = 'rgba('+r2+','+g2+','+b2+','+(flashT * 0.08)+')';
-    c.fillRect(0, 0, W, H);
+  /* ── PHASE: PULSE 1 — BASS (Neongrün) ── */
+  if(elapsed >= CIP.pulse1 && elapsed < CIP.gap2){
+    if(!CI.bassPlayed){ ciBass(); CI.bassPlayed=true; }
+    var pt=(elapsed-CIP.pulse1)/CIT.pulse1;
+    var ft=Math.sin(pt*Math.PI);
+    var col='rgb('+Math.round(lerp(212,0,ft))+','+Math.round(lerp(175,255,ft))+','+Math.round(lerp(55,136,ft))+')';
+    ciWifi(cx,cy,maxR,col,1,1+ft*2.8);
+    /* Expandierender Ring */
+    var rr=maxR*(1+pt*0.7), ra=(1-pt)*0.65;
+    c.beginPath(); c.arc(cx,cy,rr,0,Math.PI*2);
+    c.strokeStyle='rgba(0,255,136,'+ra+')'; c.lineWidth=5*(1-pt); c.stroke();
+    /* Zweiter Ring */
+    var rr2=maxR*(1+pt*1.2), ra2=(1-pt)*0.3;
+    c.beginPath(); c.arc(cx,cy,rr2,0,Math.PI*2);
+    c.strokeStyle='rgba(0,255,136,'+ra2+')'; c.lineWidth=2.5*(1-pt); c.stroke();
+    /* Bildschirm-Blitz */
+    c.fillStyle='rgba(0,255,136,'+(ft*0.07)+')'; c.fillRect(0,0,W,H);
   }
 
-  /* ──────────────────────────────
-     PHASE: GAP2
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.gap2 && elapsed < introPhaseTimes.pulse2){
-    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+  /* ── GAP2 ── */
+  if(elapsed >= CIP.gap2 && elapsed < CIP.pulse2){
+    ciWifi(cx,cy,maxR,'#d4af37',1,1);
   }
 
-  /* ──────────────────────────────
-     PHASE: PULSE 2 — SONAR PING (neon yellow-cyan)
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.pulse2 && elapsed < introPhaseTimes.gap3){
-    if(!sonarPlayed){ playSonarPing(); sonarPlayed = true; }
-    var pt = (elapsed - introPhaseTimes.pulse2) / T.pulse2;
-    var flashT = Math.sin(pt * Math.PI);
-    /* Cyan-yellow flash */
-    var r3 = Math.round(lerp(212, 200, flashT));
-    var g3 = Math.round(lerp(175, 255, flashT));
-    var b3 = Math.round(lerp(55, 60, flashT));
-    var pCol2 = 'rgb('+r3+','+g3+','+b3+')';
-    var glow3 = 1 + flashT * 3;
-    drawIntroWifi(cx, cy, maxR, pCol2, 1, glow3);
-
-    /* Sonar wave rings (3 expanding) */
-    for(var ri = 0; ri < 3; ri++){
-      var rDelay = ri * 0.18;
-      var rPt = Math.max(0, pt - rDelay);
-      if(rPt <= 0) continue;
-      var rR = maxR * (1 + rPt * 0.9);
-      var rA = Math.max(0, (1 - rPt) * 0.55);
-      c.beginPath(); c.arc(cx, cy, rR, 0, Math.PI*2);
-      c.strokeStyle = 'rgba('+r3+','+g3+','+b3+','+rA+')';
-      c.lineWidth = 3.5 * Math.max(0, 1-rPt*1.5);
-      c.stroke();
+  /* ── PHASE: PULSE 2 — SONAR (Cyan-Gelb) ── */
+  if(elapsed >= CIP.pulse2 && elapsed < CIP.gap3){
+    if(!CI.sonarPlayed){ ciSonar(); CI.sonarPlayed=true; }
+    var pt=(elapsed-CIP.pulse2)/CIT.pulse2;
+    var ft=Math.sin(pt*Math.PI);
+    var col2='rgb('+Math.round(lerp(212,220,ft))+','+Math.round(lerp(175,255,ft))+','+Math.round(lerp(55,80,ft))+')';
+    ciWifi(cx,cy,maxR,col2,1,1+ft*3.2);
+    /* 3 gestaffelte Sonar-Ringe */
+    for(var ri=0;ri<3;ri++){
+      var rpt=Math.max(0,pt-ri*0.18);
+      if(rpt<=0) continue;
+      var rr3=maxR*(1+rpt*0.95), ra3=Math.max(0,(1-rpt)*0.52);
+      c.beginPath(); c.arc(cx,cy,rr3,0,Math.PI*2);
+      c.strokeStyle='rgba('+Math.round(lerp(212,220,ft))+','+Math.round(lerp(175,255,ft))+',80,'+ra3+')';
+      c.lineWidth=3.5*Math.max(0,1-rpt*1.5); c.stroke();
     }
-
-    /* Screen cyan flash */
-    c.fillStyle = 'rgba('+r3+','+g3+','+b3+','+(flashT * 0.06)+')';
-    c.fillRect(0, 0, W, H);
+    c.fillStyle='rgba(200,255,80,'+(ft*0.06)+')'; c.fillRect(0,0,W,H);
   }
 
-  /* ──────────────────────────────
-     PHASE: GAP3 — logo still visible
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.gap3 && elapsed < introPhaseTimes.title){
-    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
+  /* ── GAP3: Logo hält ── */
+  if(elapsed >= CIP.gap3 && elapsed < CIP.titledrop){
+    ciWifi(cx,cy,maxR,'#d4af37',1,1);
   }
 
-  /* ──────────────────────────────
-     PHASE: TITLE DROP
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.title && elapsed < introPhaseTimes.hold){
-    if(!titleDropped){ titleDropped = true; }
-    var pt = easeOut((elapsed - introPhaseTimes.title) / T.title);
-
-    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
-
-    /* Title slides down from above logo */
-    var titleBaseY = cy - maxR * 1.08;
-    var titleY = titleBaseY - 40 * (1 - pt);
-    var tAlpha = Math.min(pt * 2, 1);
-
-    /* Main title */
+  /* ── PHASE: TITEL-DROP ── */
+  if(elapsed >= CIP.titledrop && elapsed < CIP.hold){
+    var pt=ciEaseOut3(Math.min((elapsed-CIP.titledrop)/CIT.titledrop,1));
+    ciWifi(cx,cy,maxR,'#d4af37',1,1);
+    var titleY = cy - maxR*1.1 - 38*(1-pt);
+    var tA     = Math.min(pt*2.2, 1);
+    var fsize  = Math.round(Math.min(W,H)*0.068);
     c.save();
-    c.globalAlpha = tAlpha;
-    c.shadowColor  = '#d4af37'; c.shadowBlur = 18 * pt;
-    c.fillStyle = '#f5e070';
-    c.font = "700 "+Math.round(Math.min(W,H)*0.072)+"px 'Cinzel Decorative',serif";
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.letterSpacing = '0.12em';
-    c.fillText('WIPULSCAN · PRO', cx, titleY);
-    c.restore();
-
-    /* Sub-title */
-    var subAlpha = Math.max(0, (pt - 0.5) * 2);
-    c.save();
-    c.globalAlpha = subAlpha * 0.6;
-    c.fillStyle = '#888888';
-    c.font = "400 "+Math.round(Math.min(W,H)*0.028)+"px 'Share Tech Mono',monospace";
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText('Powered by Cobra Dynamics', cx, titleY + Math.min(W,H)*0.054);
-    c.restore();
-  }
-
-  /* ──────────────────────────────
-     PHASE: HOLD (everything visible)
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.hold && elapsed < introPhaseTimes.iris){
-    drawIntroWifi(cx, cy, maxR, '#d4af37', 1, 1);
-
-    var titleBaseY = cy - maxR * 1.08;
-    c.save();
-    c.shadowColor='#d4af37';c.shadowBlur=18;c.globalAlpha=1;
+    c.shadowColor='#d4af37'; c.shadowBlur=18*pt;
+    c.globalAlpha=tA;
     c.fillStyle='#f5e070';
-    c.font="700 "+Math.round(Math.min(W,H)*0.072)+"px 'Cinzel Decorative',serif";
-    c.textAlign='center';c.textBaseline='middle';
-    c.fillText('WIPULSCAN · PRO',cx,titleBaseY);
+    c.font='700 '+fsize+'px Cinzel Decorative,Cinzel,serif';
+    c.textAlign='center'; c.textBaseline='middle';
+    c.fillText('WIPULSCAN \u00b7 PRO', cx, titleY);
     c.restore();
-    c.save();c.globalAlpha=0.55;c.fillStyle='#888';
-    c.font="400 "+Math.round(Math.min(W,H)*0.028)+"px 'Share Tech Mono',monospace";
-    c.textAlign='center';c.textBaseline='middle';
-    c.fillText('Powered by Cobra Dynamics',cx,titleBaseY+Math.min(W,H)*0.054);
+    var subA=Math.max(0,(pt-0.55)*2.2);
+    if(subA>0){
+      c.save();
+      c.globalAlpha=subA*0.55;
+      c.fillStyle='#aaaaaa';
+      c.font='400 '+Math.round(fsize*0.42)+'px Share Tech Mono,monospace';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText('Entwickelt von Cobra Dynamics', cx, titleY+fsize*0.88);
+      c.restore();
+    }
+  }
+
+  /* ── HOLD: alles sichtbar ── */
+  if(elapsed >= CIP.hold && elapsed < CIP.iris){
+    ciWifi(cx,cy,maxR,'#d4af37',1,1);
+    var titleY=cy-maxR*1.1;
+    var fsize=Math.round(Math.min(W,H)*0.068);
+    c.save();
+    c.shadowColor='#d4af37'; c.shadowBlur=18;
+    c.fillStyle='#f5e070';
+    c.font='700 '+fsize+'px Cinzel Decorative,Cinzel,serif';
+    c.textAlign='center'; c.textBaseline='middle';
+    c.fillText('WIPULSCAN \u00b7 PRO',cx,titleY);
+    c.restore();
+    c.save();
+    c.globalAlpha=0.52; c.fillStyle='#aaaaaa';
+    c.font='400 '+Math.round(fsize*0.42)+'px Share Tech Mono,monospace';
+    c.textAlign='center'; c.textBaseline='middle';
+    c.fillText('Entwickelt von Cobra Dynamics',cx,titleY+fsize*0.88);
     c.restore();
   }
 
-  /* ──────────────────────────────
-     PHASE: IRIS REVEAL
-     Logo dissolves into fragments,
-     iris circle expands revealing camera
-  ────────────────────────────── */
-  if(elapsed >= introPhaseTimes.iris){
-    var pt = Math.min((elapsed - introPhaseTimes.iris) / T.iris, 1);
-    var easeT = easeInOut(pt);
+  /* ── PHASE: IRIS-REVEAL ── */
+  if(elapsed >= CIP.iris){
+    var pt=Math.min((elapsed-CIP.iris)/CIT.iris, 1);
+    var eT=ciEaseInOut(pt);
 
-    /* Logo fades out */
-    var logoAlpha = Math.max(0, 1 - easeT * 2.2);
-    if(logoAlpha > 0) drawIntroWifi(cx, cy, maxR, '#d4af37', logoAlpha, 1);
-
-    /* Title fades out */
-    var titleAlpha = Math.max(0, 1 - pt * 3);
-    if(titleAlpha > 0){
-      var titleBaseY = cy - maxR * 1.08;
-      c.save();c.globalAlpha=titleAlpha;c.fillStyle='#f5e070';
-      c.font="700 "+Math.round(Math.min(W,H)*0.072)+"px 'Cinzel Decorative',serif";
-      c.textAlign='center';c.textBaseline='middle';
-      c.fillText('WIPULSCAN · PRO',cx,titleBaseY);
+    /* Logo + Titel verblassen */
+    var lA=Math.max(0,1-eT*2.5);
+    if(lA>0) ciWifi(cx,cy,maxR,'#d4af37',lA,1);
+    var tA2=Math.max(0,1-pt*4);
+    if(tA2>0){
+      var fsize=Math.round(Math.min(W,H)*0.068);
+      c.save(); c.globalAlpha=tA2; c.fillStyle='#f5e070';
+      c.shadowColor='#d4af37'; c.shadowBlur=10;
+      c.font='700 '+fsize+'px Cinzel Decorative,Cinzel,serif';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText('WIPULSCAN \u00b7 PRO',cx,cy-maxR*1.1);
       c.restore();
     }
 
-    /* ── Physics-based fragment dissolve ── */
-    /* Advance physics (only while alive) */
-    INTRO.fragments = INTRO.fragments.filter(function(f){ return f.life > 0; });
-    INTRO.fragments.forEach(function(f){
-      f.x  += f.vx;
-      f.y  += f.vy;
-      f.vy += 0.045;   /* gravity */
-      f.vx *= 0.98;    /* air drag */
-      f.life -= f.decay;
-      if(f.life <= 0) return;
-
-      /* Glow halo */
+    /* Physik-Fragmente */
+    ciFrags=ciFrags.filter(function(f){return f.life>0;});
+    ciFrags.forEach(function(f){
+      f.x+=f.vx; f.y+=f.vy;
+      f.vy+=0.042; f.vx*=0.985;
+      f.life-=f.decay;
+      if(f.life<=0) return;
       c.save();
-      c.shadowColor = '#'+f.col;
-      c.shadowBlur  = 6 * f.life;
-      c.fillStyle   = 'rgba(255,215,0,'+( f.life * 0.55 )+')'; /* Signal-Gold */
-      c.fillRect(f.x - f.size*0.5, f.y - f.size*0.5, f.size, f.size);
-      /* Accent color overlay */
-      c.fillStyle   = '#' + f.col;
-      c.globalAlpha = f.life * 0.85;
-      c.fillRect(f.x - f.size*0.4, f.y - f.size*0.4, f.size*0.8, f.size*0.8);
+      c.shadowColor=f.col; c.shadowBlur=5*f.life;
+      /* Signal-Gold Kern */
+      c.fillStyle='rgba(255,215,0,'+(f.life*0.55)+')';
+      c.fillRect(f.x-f.size*0.5, f.y-f.size*0.5, f.size, f.size);
+      /* Akzentfarbe */
+      c.globalAlpha=f.life*0.82;
+      c.fillStyle=f.col;
+      c.fillRect(f.x-f.size*0.38, f.y-f.size*0.38, f.size*0.76, f.size*0.76);
       c.restore();
     });
 
-    /* Iris: black overlay with expanding circular cutout */
-    var irisR = INTRO.irisMax * easeInOut(Math.min(pt * 1.05, 1));
+    /* Iris-Maske: schwarze Ebene mit kreisrundem Ausschnitt */
+    var irisMax=Math.sqrt(W*W+H*H)*0.62;
+    var irisR  =irisMax*ciEaseInOut(Math.min(pt*1.06,1));
     c.save();
     c.beginPath();
-    /* Outer rectangle */
-    c.rect(0, 0, W, H);
-    /* Inner circle cutout (iris) */
-    c.arc(cx, cy, Math.max(0, irisR), 0, Math.PI*2, true);
-    c.fillStyle = '#000000';
+    c.rect(0,0,W,H);
+    c.arc(cx,cy,Math.max(0,irisR),0,Math.PI*2,true);
+    c.fillStyle='#000';
     c.fill('evenodd');
     c.restore();
 
-    /* Done */
-    if(pt >= 1) finishIntro();
+    if(pt>=1) ciFinish();
   }
 }
 
-/* ── Start intro ── */
-function startIntro(){
-  var el = document.getElementById('intro');
-  var ic = document.getElementById('intro-canvas');
-  INTRO.canvas = ic;
-  INTRO.ctx    = ic.getContext('2d');
-  var dpr = window.devicePixelRatio || 1;
-  INTRO.W = window.innerWidth;
-  INTRO.H = window.innerHeight;
-  ic.width  = Math.round(INTRO.W * dpr);
-  ic.height = Math.round(INTRO.H * dpr);
-  ic.style.width  = INTRO.W + 'px';
-  ic.style.height = INTRO.H + 'px';
-  INTRO.ctx.setTransform(1,0,0,1,0,0);
-  INTRO.ctx.scale(dpr, dpr);
-  INTRO.cx = INTRO.W / 2;
-  INTRO.cy = INTRO.H * 0.48; /* Slightly below center */
-  INTRO.irisMax = Math.sqrt(INTRO.W * INTRO.W + INTRO.H * INTRO.H) * 0.62;
+/* ── Intro starten ── */
+function ciStart(){
+  var el=document.getElementById('intro');
+  var ic=document.getElementById('intro-canvas');
+  if(!el||!ic){ console.warn('Intro-Elemente nicht gefunden'); ciFinish(); return; }
 
-  generateFragments();
-  buildSchedule();
-  introAudio();
+  var dpr=window.devicePixelRatio||1;
+  CI.W=window.innerWidth; CI.H=window.innerHeight;
+  ic.width =Math.round(CI.W*dpr); ic.height=Math.round(CI.H*dpr);
+  ic.style.width=CI.W+'px'; ic.style.height=CI.H+'px';
+  CI.ctx=ic.getContext('2d');
+  CI.ctx.setTransform(1,0,0,1,0,0);
+  CI.ctx.scale(dpr,dpr);
 
-  bassPlayed = false; sonarPlayed = false; titleDropped = false;
-  INTRO.skipped = false;
-  introStartTime = performance.now();
+  cisBuild();
+  ciGenFrags(CI.W*0.5, CI.H*0.48, Math.min(CI.W,CI.H)*0.44);
+  ciAudio();
+
+  CI.bassPlayed=false; CI.sonarPlayed=false;
+  CI.skipped=false; CI.running=true;
+  CI.start=performance.now();
 
   el.classList.add('active');
-  INTRO.raf = requestAnimationFrame(introLoop);
+  CI.raf=requestAnimationFrame(ciLoop);
 }
 
-/* ── Finish intro → auto-enter scanner ── */
-async function finishIntro(){
-  if(INTRO.skipped) return;
-  INTRO.skipped = true; /* prevent double-call */
-  cancelAnimationFrame(INTRO.raf);
-
-  var el = document.getElementById('intro');
-  el.style.transition = 'opacity .45s ease';
-  el.style.opacity = '0';
-  setTimeout(function(){ el.classList.remove('active'); el.style.opacity=''; }, 460);
-
-  /* Directly enter scanner + auto-start scan */
-  await window.enterScanner(true);
+/* ── Intro beenden → Scanner starten ── */
+function ciFinish(){
+  if(!CI.running) return;
+  CI.running=false; CI.skipped=true;
+  cancelAnimationFrame(CI.raf);
+  var el=document.getElementById('intro');
+  if(el){
+    el.style.transition='opacity 0.45s ease';
+    el.style.opacity='0';
+    setTimeout(function(){
+      el.classList.remove('active');
+      el.style.opacity='';
+    },460);
+  }
+  window.enterScanner(true);
 }
 
-/* ── Skip button ── */
-window.skipIntro = function(){
-  if(INTRO.skipped) return;
-  INTRO.skipped = true;
-  cancelAnimationFrame(INTRO.raf);
-  var el = document.getElementById('intro');
-  el.style.transition = 'opacity .3s ease';
-  el.style.opacity = '0';
-  setTimeout(function(){ el.classList.remove('active'); el.style.opacity=''; }, 320);
+/* ── Überspringen ── */
+window.skipIntro=function(){
+  if(!CI.running) return;
+  CI.running=false; CI.skipped=true;
+  cancelAnimationFrame(CI.raf);
+  var el=document.getElementById('intro');
+  if(el){
+    el.style.transition='opacity 0.28s ease';
+    el.style.opacity='0';
+    setTimeout(function(){el.classList.remove('active');el.style.opacity='';},300);
+  }
   window.enterScanner(true);
 };
 
-function showSplash(){ startIntro(); }
+function showSplash(){ ciStart(); }
 
 window.enterScanner=async function(autoScan){
   /* Hide old splash if still visible (legacy path) */

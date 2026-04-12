@@ -20,14 +20,17 @@
   --sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px);
 }
 html,body{width:100%;height:100%;overflow:hidden;background:#000;
-  font-family:'Cinzel',serif;color:#fff;touch-action:none;
+  font-family:'Cinzel',serif;color:#fff;
   -webkit-user-select:none;user-select:none;overscroll-behavior:none}
+/* Touch-action nur auf AR-Elemente, nicht global */
 
 /* ═══ INTRO ═══ */
 #intro{position:fixed;inset:0;z-index:300;background:#000;overflow:hidden;display:none}
 #ic{position:absolute;top:0;left:0;display:block}
 #skip-btn{position:absolute;bottom:calc(28px + var(--sb));right:22px;
   font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.32em;
+  color:rgba(255,255,255,.3);background:transparent;border:none;cursor:pointer;
+  padding:10px 14px;-webkit-appearance:none}
 
 /* ═══ TAP GATE (Gesture-Collector für AudioContext) ═══ */
 #tapgate{
@@ -67,8 +70,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 }
 @keyframes tgPulse{0%,100%{filter:drop-shadow(0 0 14px rgba(212,175,55,.4))}50%{filter:drop-shadow(0 0 30px rgba(212,175,55,.75))}}
 @keyframes tgBlink{0%,100%{opacity:.35}50%{opacity:.9}}
-  color:rgba(255,255,255,.3);background:transparent;border:none;cursor:pointer;
-  padding:10px 14px;-webkit-appearance:none}
 
 /* ═══ PERMISSION SCREEN ═══ */
 #perm-screen{position:fixed;inset:0;z-index:250;
@@ -1990,16 +1991,12 @@ window.deleteData=function(){
   window.closeSettings();window.closePro();
 };
 
-/* Touch-Lock — NICHT für Intro-Canvas */
+/* Touch-Lock — nur wenn Scanner aktiv (nicht Tap Gate, nicht Consent) */
 document.addEventListener('touchmove',function(e){
-  if(e.target&&e.target.id==='ic')return; /* Intro-Canvas: nicht blockieren */
+  var id=e.target&&e.target.id;
+  if(id==='ic'||id==='tapgate'||id==='consent'||id==='perm-screen')return;
+  if($('tapgate')&&!$('tapgate').classList.contains('hidden'))return;
   e.preventDefault();
-},{passive:false});
-var _lt=0;
-document.addEventListener('touchend',function(e){
-  /* Intro-Canvas: niemals blockieren (sonst funktioniert Tap-to-Continue nicht) */
-  if(e.target&&(e.target.id==='ic'||e.target.id==='intro'||e.target.id==='skip-btn'))return;
-  var n=Date.now();if(n-_lt<320)e.preventDefault();_lt=n;
 },{passive:false});
 
 /* Pro-Restore */

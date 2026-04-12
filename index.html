@@ -1472,155 +1472,288 @@ function ensureAudio(){
 }
 function ciAudio(){/* no-op: ensureAudio already called in gesture */}
 
-/* Synthetischer Hall */
-function ciMakeReverb(){
-  if(!CI.ac)return null;
+/* ══════════════════════════════════════════════════════════════
+   WIPULSCAN FANFARE ENGINE v4 — ORCHESTRAL REALISTIC
+   
+   Klangsynthese:
+   • BRASS  — Sägezahn + WaveShaper(Clip) + BPF-Formant + LPF + Vibrato
+   • STRINGS— 7 detunte Sinusse + langsamer Attack + Tremolo-LFO
+   • TIMPANI— Noise-Burst + Pitch-Env + HPF → physischer Schlag
+   • REVERB — Pre-delay + 4 Early Reflections + exponentieller Tail
+   
+   A-Dur Fanfare:
+   0.00s  Timpani + A2·E3·A3 Fundament-Akkord
+   0.30s  A4   Horn aufsteigend
+   0.52s  C#5  süße Terz
+   0.75s  E5   soarende Quinte
+   1.00s  A5 + C#6 + E6  PEAK (Gänsehaut, Vibrato, Chorus)
+   2.20s  Ausklingen — Streicher übernehmen
+══════════════════════════════════════════════════════════════ */
+
+/* ── HALL-ENGINE: Pre-delay + Early Reflections + Tail ── */
+function ciMakeReverb(ac){
   try{
-    var sr=CI.ac.sampleRate,len=Math.floor(sr*2.2);
-    var buf=CI.ac.createBuffer(2,len,sr);
+    var sr=ac.sampleRate;
+    /* 3.2s Hall mit Pre-delay 18ms + 6 Early Reflections */
+    var totalLen=Math.floor(sr*3.2);
+    var buf=ac.createBuffer(2,totalLen,sr);
+    var preDelay=Math.floor(sr*0.018);
+    /* Early reflections (6 Echos in den ersten 120ms) */
+    var erTimes=[22,38,54,72,95,118].map(function(ms){return Math.floor(sr*ms/1000);});
+    var erGains=[0.72,0.58,0.48,0.38,0.28,0.18];
     for(var ch=0;ch<2;ch++){
       var d=buf.getChannelData(ch);
-      for(var i=0;i<len;i++){d[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.8)*0.55;}
+      for(var i=preDelay;i<totalLen;i++){
+        var t=i-preDelay;
+        /* Late reverberation: gefiltertes exponentielles Rauschen */
+        var decay=Math.pow(1-t/totalLen,1.6);
+        var noise=(Math.random()*2-1);
+        /* Hochfrequenz-Rolloff simulieren (Luft-Absorption) */
+        if(i>0)d[i]=noise*decay*0.45 + d[i-1]*0.38;
+        else d[i]=noise*decay*0.45;
+      }
+      /* Early Reflections darüberlegen */
+      erTimes.forEach(function(erT,idx){
+        var pos=preDelay+erT;
+        if(pos<totalLen)d[pos]+=erGains[idx]*(ch===0?1:-1)*0.6;
+      });
     }
-    var conv=CI.ac.createConvolver();conv.buffer=buf;return conv;
+    var conv=ac.createConvolver();conv.buffer=buf;return conv;
   }catch(e){return null;}
 }
 
-/* Brass Voice: Sägezahn + Tiefpassfilter = Hornklang */
-function brassVoice(ac,n,freq,startT,dur,vol,cutoff){
-  var o=ac.createOscillator(),o2=ac.createOscillator();
-  var flt=ac.createBiquadFilter(),g=ac.createGain();
-  o.type='sawtooth';o.frequency.value=freq;
-  o2.type='sawtooth';o2.frequency.value=freq;o2.detune.value=8;
-  flt.type='lowpass';flt.Q.value=1.2;
-  var atk=0.035,t0=n+startT;
-  flt.frequency.setValueAtTime(freq*2,t0);
-  flt.frequency.linearRampToValueAtTime(cutoff||freq*6,t0+atk*3);
-  g.gain.setValueAtTime(0,t0);
-  g.gain.linearRampToValueAtTime(vol,t0+atk);
-  g.gain.setValueAtTime(vol,t0+dur*0.55);
-  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
-  if(dur>0.5){
-    var lfo=ac.createOscillator(),lg=ac.createGain();
-    lfo.frequency.value=5.8;lg.gain.value=5;
-    lfo.connect(lg);lg.connect(o.frequency);
-    lfo.start(t0+0.28);lfo.stop(t0+dur);
+/* ── BRASS VOICE: Sägezahn → Clip-Waveshaper → Formant-BPF → LPF ── */
+function makeBrass(ac,n,freq,t0,dur,vol){
+  /* Waveshaper-Kurve: sanftes Soft-Clip für Oberton-Anreicherung */
+  var ws=ac.createWaveShaper();
+  var curve=new Float32Array(512);
+  for(var i=0;i<512;i++){
+    var x=i/256-1;
+    curve[i]=x/(1+Math.abs(x)*2.2)*1.8; /* sigmoid-clip */
   }
-  o.connect(flt);o2.connect(flt);flt.connect(g);
-  o.start(t0);o.stop(t0+dur+0.1);
-  o2.start(t0);o2.stop(t0+dur+0.1);
+  ws.curve=curve;ws.oversample='2x';
+
+  var osc=ac.createOscillator();
+  osc.type='sawtooth';osc.frequency.value=freq;
+  /* Vibrato (ab 300ms) */
+  var vib=ac.createOscillator(),vibG=ac.createGain();
+  vib.frequency.value=5.6;vibG.gain.setValueAtTime(0,n+t0);
+  vibG.gain.linearRampToValueAtTime(freq*0.008,n+t0+0.30);
+  vib.connect(vibG);vibG.connect(osc.frequency);
+  vib.start(n+t0);vib.stop(n+t0+dur+0.1);
+
+  /* Formant-Filter (gibt Brass seinen typischen Hohlkörper-Klang) */
+  var bpf=ac.createBiquadFilter();
+  bpf.type='bandpass';bpf.frequency.value=freq*2.8;bpf.Q.value=2.2;
+
+  /* Haupt-LPF mit Attack-Sweep */
+  var lpf=ac.createBiquadFilter();
+  lpf.type='lowpass';lpf.Q.value=0.9;
+  lpf.frequency.setValueAtTime(freq*1.5,n+t0);
+  lpf.frequency.exponentialRampToValueAtTime(freq*7,n+t0+0.06);
+  lpf.frequency.setValueAtTime(freq*7,n+t0+dur*0.5);
+  lpf.frequency.exponentialRampToValueAtTime(freq*2,n+t0+dur);
+
+  var g=ac.createGain();
+  g.gain.setValueAtTime(0,n+t0);
+  g.gain.linearRampToValueAtTime(vol,n+t0+0.032);
+  g.gain.setValueAtTime(vol,n+t0+dur*0.6);
+  g.gain.exponentialRampToValueAtTime(0.0001,n+t0+dur);
+
+  osc.connect(ws);ws.connect(bpf);bpf.connect(lpf);lpf.connect(g);
+  osc.start(n+t0);osc.stop(n+t0+dur+0.15);
+
+  /* Zweite Stimme leicht detuned für Ensemble-Breite */
+  var osc2=ac.createOscillator();
+  osc2.type='sawtooth';osc2.frequency.value=freq;osc2.detune.value=11;
+  var ws2=ac.createWaveShaper();ws2.curve=curve;ws2.oversample='2x';
+  var lpf2=ac.createBiquadFilter();
+  lpf2.type='lowpass';lpf2.frequency.value=freq*4;
+  var g2=ac.createGain();
+  g2.gain.setValueAtTime(0,n+t0);
+  g2.gain.linearRampToValueAtTime(vol*0.35,n+t0+0.04);
+  g2.gain.exponentialRampToValueAtTime(0.0001,n+t0+dur);
+  osc2.connect(ws2);ws2.connect(lpf2);lpf2.connect(g2);
+  osc2.start(n+t0);osc2.stop(n+t0+dur+0.15);
+
+  /* Mix-Bus */
+  var mix=ac.createGain();mix.gain.value=1;
+  g.connect(mix);g2.connect(mix);
+  return mix;
+}
+
+/* ── STRING ENSEMBLE: 7 Sinusse mit Tremolo-LFO ── */
+function makeStrings(ac,n,freq,t0,dur,vol){
+  var mix=ac.createGain();mix.gain.value=1;
+  /* Tremolo */
+  var trem=ac.createOscillator(),tremG=ac.createGain();
+  trem.frequency.value=4.8;tremG.gain.value=0.08;
+  trem.connect(tremG);
+  var baseG=ac.createGain();baseG.gain.value=0.92;
+  tremG.connect(baseG.gain);
+  trem.start(n+t0);trem.stop(n+t0+dur+0.2);
+
+  /* 7 leicht detunte Stimmen: ±18, ±9, ±4, 0 Cent */
+  [-18,-9,-4,0,4,9,18].forEach(function(det,i){
+    var o=ac.createOscillator(),og=ac.createGain();
+    o.type='sine';o.frequency.value=freq;o.detune.value=det;
+    /* Individuelle Lautstärke: Mitte am lautesten */
+    var detVol=vol*(i===3?1.0:i===2||i===4?0.65:i===1||i===5?0.42:0.22);
+    og.gain.setValueAtTime(0,n+t0);
+    og.gain.linearRampToValueAtTime(detVol,n+t0+0.14); /* langsamer Streicher-Attack */
+    og.gain.setValueAtTime(detVol,n+t0+dur*0.72);
+    og.gain.exponentialRampToValueAtTime(0.0001,n+t0+dur);
+    o.connect(og);og.connect(baseG);
+    o.start(n+t0);o.stop(n+t0+dur+0.2);
+  });
+  baseG.connect(mix);
+  return mix;
+}
+
+/* ── TIMPANI: Noise-Burst + Pitch-Drop Envelope ── */
+function makeTimpani(ac,n,t0){
+  /* Tuned-Noise: weißes Rauschen durch enge BPF-Bank */
+  var noise=ac.createOscillator(); /* nicht wirklich Rauschen, aber klingt ähnlich */
+  noise.type='sawtooth';noise.frequency.value=110;
+  noise.frequency.setValueAtTime(110,n+t0);
+  noise.frequency.exponentialRampToValueAtTime(55,n+t0+0.18);
+
+  var bpf1=ac.createBiquadFilter();bpf1.type='bandpass';bpf1.frequency.value=120;bpf1.Q.value=0.8;
+  var hpf=ac.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=40;
+
+  var g=ac.createGain();
+  g.gain.setValueAtTime(0,n+t0);
+  g.gain.linearRampToValueAtTime(0.9,n+t0+0.008); /* harter Attack */
+  g.gain.exponentialRampToValueAtTime(0.001,n+t0+0.8);
+
+  noise.connect(bpf1);bpf1.connect(hpf);hpf.connect(g);
+  noise.start(n+t0);noise.stop(n+t0+0.85);
   return g;
 }
 
-/* String Voice: Sinus-Cluster = warme Streicher */
-function stringVoice(ac,n,freq,startT,dur,vol){
-  var bus=ac.createGain(),t0=n+startT;
-  bus.gain.setValueAtTime(0,t0);
-  bus.gain.linearRampToValueAtTime(1,t0+0.08);
-  bus.gain.setValueAtTime(1,t0+dur*0.7);
-  bus.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
-  [-12,-5,0,5,12].forEach(function(det,i){
-    var o=ac.createOscillator(),og=ac.createGain();
-    o.type='sine';o.frequency.value=freq;o.detune.value=det;
-    og.gain.value=vol*(i===2?1:0.4);
-    o.connect(og);og.connect(bus);
-    o.start(t0);o.stop(t0+dur+0.1);
-  });
-  return bus;
-}
-
-/* Bass-Thud Puls 1 */
+/* ── BASS THUD für Puls 1 ── */
 function ciBass(){
   if(!CI.ac)return;
   try{
     if(CI.ac.state==='suspended')CI.ac.resume().catch(function(){});
     var ac=CI.ac,n=ac.currentTime;
-    var g=ac.createGain();g.gain.value=0.85;g.connect(ac.destination);
+    var g=ac.createGain();g.gain.value=0.9;g.connect(ac.destination);
     var o=ac.createOscillator(),og=ac.createGain();
-    o.type='sine';o.frequency.setValueAtTime(55,n);o.frequency.exponentialRampToValueAtTime(28,n+0.55);
-    og.gain.setValueAtTime(0,n);og.gain.linearRampToValueAtTime(0.8,n+0.02);og.gain.exponentialRampToValueAtTime(0.001,n+0.65);
+    o.type='sine';
+    o.frequency.setValueAtTime(60,n);o.frequency.exponentialRampToValueAtTime(30,n+0.55);
+    og.gain.setValueAtTime(0,n);og.gain.linearRampToValueAtTime(0.85,n+0.015);
+    og.gain.exponentialRampToValueAtTime(0.001,n+0.65);
     o.connect(og);og.connect(g);o.start(n);o.stop(n+0.7);
-    var o2=ac.createOscillator(),og2=ac.createGain();
-    o2.type='triangle';o2.frequency.value=110;
-    og2.gain.setValueAtTime(0.35,n);og2.gain.exponentialRampToValueAtTime(0.001,n+0.4);
-    o2.connect(og2);og2.connect(g);o2.start(n);o2.stop(n+0.45);
+    makeTimpani(ac,n,0).connect(g);
   }catch(e){}
 }
 
-/* Mid-Punch Puls 2 */
+/* ── MID PUNCH für Puls 2 ── */
 function ciMidPunch(){
   if(!CI.ac)return;
   try{
     if(CI.ac.state==='suspended')CI.ac.resume().catch(function(){});
     var ac=CI.ac,n=ac.currentTime;
-    var g=ac.createGain();g.gain.value=0.72;g.connect(ac.destination);
-    brassVoice(ac,n,220,0,0.55,0.6,1800).connect(g);
-    brassVoice(ac,n,330,0.04,0.48,0.4,2200).connect(g);
+    var g=ac.createGain();g.gain.value=0.75;g.connect(ac.destination);
+    makeBrass(ac,n,220,0,0.55,0.55).connect(g);
+    makeBrass(ac,n,330,0.05,0.48,0.38).connect(g);
   }catch(e){}
 }
 
-/* ★ WIPULSCAN EXCLUSIVE FANFARE v3 ★
-   Brass+Strings+Choir Orchestral · Wet/Dry Reverb · Compressor
-   A2 Boom → A4·C#5·E5 Arpeggio → A5 Peak (Gänsehaut) */
+/* ══════════════════════════════════════════════════════════════
+   ★ WIPULSCAN FANFARE v4 — A-DUR ORCHESTRAL ★
+   Brass + Strings + Timpani + Early-Reflection Reverb
+══════════════════════════════════════════════════════════════ */
 function ciMelody(){
   if(!CI.ac)return;
   try{
     if(CI.ac.state==='suspended')CI.ac.resume().catch(function(){});
-    var ac=CI.ac,n=ac.currentTime;
-    /* Ausgabekette */
+    var ac=CI.ac, n=ac.currentTime;
+
+    /* ── Ausgabe-Kette ── */
     var comp=ac.createDynamicsCompressor();
-    comp.threshold.value=-10;comp.knee.value=8;comp.ratio.value=5;
-    comp.attack.value=0.002;comp.release.value=0.3;comp.connect(ac.destination);
-    /* Wet/Dry */
-    var dry=ac.createGain();dry.gain.value=0.68;dry.connect(comp);
-    var wet=ac.createGain();wet.gain.value=0.44;
-    var rev=ciMakeReverb();
+    comp.threshold.value=-9;comp.knee.value=8;comp.ratio.value=4;
+    comp.attack.value=0.003;comp.release.value=0.28;comp.connect(ac.destination);
+
+    var rev=ciMakeReverb(ac);
+    var dry=ac.createGain();dry.gain.value=0.62;dry.connect(comp);
+    var wet=ac.createGain();wet.gain.value=0.52;
     if(rev){rev.connect(comp);wet.connect(rev);}else{wet.connect(comp);}
-    var bus=ac.createGain();bus.gain.value=0.76;bus.connect(dry);bus.connect(wet);
-    /* 0.00s: Boom */
-    var sub=ac.createOscillator(),subg=ac.createGain();
-    sub.type='sine';sub.frequency.setValueAtTime(55,n);sub.frequency.exponentialRampToValueAtTime(40,n+0.8);
-    subg.gain.setValueAtTime(0,n);subg.gain.linearRampToValueAtTime(0.65,n+0.02);subg.gain.exponentialRampToValueAtTime(0.001,n+1.1);
-    sub.connect(subg);subg.connect(bus);sub.start(n);sub.stop(n+1.2);
-    brassVoice(ac,n,110,0,1.3,0.48,900).connect(bus);
-    brassVoice(ac,n,165,0.05,1.1,0.28,1200).connect(bus);
-    stringVoice(ac,n,220,0,1.2,0.22).connect(bus);
-    /* 0.35s: A4 */
-    brassVoice(ac,n,440,0.35,0.55,0.42,3200).connect(bus);
-    stringVoice(ac,n,440,0.35,0.60,0.18).connect(bus);
-    /* 0.58s: C#5 */
-    brassVoice(ac,n,554.37,0.58,0.52,0.40,3600).connect(bus);
-    /* 0.82s: E5 */
-    brassVoice(ac,n,659.25,0.82,0.58,0.42,3800).connect(bus);
-    stringVoice(ac,n,659.25,0.82,0.65,0.18).connect(bus);
-    /* 1.08s: A5 PEAK */
-    brassVoice(ac,n,880,1.08,3.8,0.52,5000).connect(bus);
-    [-14,-7,0,7,14].forEach(function(det){
+
+    /* Stereo-Width via StereoPanner (wo verfügbar) */
+    var bus=ac.createGain();bus.gain.value=0.74;
+    bus.connect(dry);bus.connect(wet);
+
+    /* ── 0.00s: TIMPANI-SCHLAG + FUNDAMENT A2·E3·A3 ── */
+    makeTimpani(ac,n,0.00).connect(bus);
+    /* Sub-Bass A1 */
+    var sub=ac.createOscillator(),subG=ac.createGain();
+    sub.type='sine';
+    sub.frequency.setValueAtTime(55,n);sub.frequency.exponentialRampToValueAtTime(44,n+0.7);
+    subG.gain.setValueAtTime(0,n);subG.gain.linearRampToValueAtTime(0.62,n+0.015);
+    subG.gain.exponentialRampToValueAtTime(0.001,n+1.1);
+    sub.connect(subG);subG.connect(bus);sub.start(n);sub.stop(n+1.2);
+    /* Brass-Fundament */
+    makeBrass(ac,n,110,0.00,1.40,0.52).connect(bus);  /* A2  */
+    makeBrass(ac,n,165,0.04,1.20,0.32).connect(bus);  /* E3  */
+    makeStrings(ac,n,220,0.00,1.30,0.26).connect(bus);/* A3 Streicher */
+
+    /* ── 0.30s: A4 — Horn aufsteigend ── */
+    makeBrass(ac,n,440,0.30,0.56,0.46).connect(bus);
+    makeStrings(ac,n,440,0.30,0.62,0.20).connect(bus);
+
+    /* ── 0.52s: C#5 — süße Terz ── */
+    makeBrass(ac,n,554.37,0.52,0.52,0.44).connect(bus);
+
+    /* ── 0.75s: E5 — soarende Quinte ── */
+    makeBrass(ac,n,659.25,0.75,0.58,0.46).connect(bus);
+    makeStrings(ac,n,659.25,0.75,0.68,0.22).connect(bus);
+
+    /* ── 1.00s: ★ PEAK — A5 + C#6 + E6 + Choir ★ ── */
+    /* Haupt-Trompete A5 */
+    makeBrass(ac,n,880,1.00,4.20,0.54).connect(bus);
+    /* Choir — 5 Sinusse ±16 Cent Chorus-Breite */
+    [-16,-8,0,8,16].forEach(function(det){
       var o=ac.createOscillator(),og=ac.createGain();
       o.type='sine';o.frequency.value=880;o.detune.value=det;
-      og.gain.setValueAtTime(0,n+1.08);og.gain.linearRampToValueAtTime(0.10,n+1.14);
-      og.gain.setValueAtTime(0.10,n+1.08+3.0);og.gain.exponentialRampToValueAtTime(0.0001,n+1.08+3.8);
-      var lfo=ac.createOscillator(),lg=ac.createGain();
-      lfo.frequency.value=5.4+Math.abs(det)*0.02;lg.gain.value=4;
-      lfo.connect(lg);lg.connect(o.frequency);lfo.start(n+1.38);lfo.stop(n+5.0);
-      o.connect(og);og.connect(bus);o.start(n+1.08);o.stop(n+5.1);
+      /* Langzeitiger Vibrato ab 400ms */
+      var vib=ac.createOscillator(),vibG=ac.createGain();
+      vib.frequency.value=5.2+Math.abs(det)*0.01;vibG.gain.value=0;
+      vibG.gain.setValueAtTime(0,n+1.0);
+      vibG.gain.linearRampToValueAtTime(880*0.006,n+1.40);
+      vib.connect(vibG);vibG.connect(o.frequency);
+      vib.start(n+1.0);vib.stop(n+5.2);
+      og.gain.setValueAtTime(0,n+1.0);
+      og.gain.linearRampToValueAtTime(det===0?0.14:0.07,n+1.06);
+      og.gain.setValueAtTime(det===0?0.14:0.07,n+1.0+3.8);
+      og.gain.exponentialRampToValueAtTime(0.0001,n+1.0+4.2);
+      o.connect(og);og.connect(bus);
+      o.start(n+1.0);o.stop(n+5.3);
     });
-    brassVoice(ac,n,1108.7,1.08,3.4,0.22,6000).connect(bus);
-    stringVoice(ac,n,1108.7,1.10,3.2,0.14).connect(bus);
-    brassVoice(ac,n,1318.5,1.15,3.0,0.14,6500).connect(bus);
-    var sh=ac.createOscillator(),sg=ac.createGain();
+    /* Terz C#6 */
+    makeBrass(ac,n,1108.73,1.00,3.80,0.24).connect(bus);
+    makeStrings(ac,n,1108.73,1.05,3.60,0.16).connect(bus);
+    /* Quinte E6 */
+    makeBrass(ac,n,1318.51,1.08,3.40,0.15).connect(bus);
+    /* Glanz-Oberton A6 */
+    var sh=ac.createOscillator(),shG=ac.createGain();
     sh.type='sine';sh.frequency.value=1760;
-    sg.gain.setValueAtTime(0,n+1.12);sg.gain.linearRampToValueAtTime(0.06,n+1.18);sg.gain.exponentialRampToValueAtTime(0.0001,n+4.0);
-    sh.connect(sg);sg.connect(bus);sh.start(n+1.12);sh.stop(n+4.1);
+    shG.gain.setValueAtTime(0,n+1.08);shG.gain.linearRampToValueAtTime(0.055,n+1.14);
+    shG.gain.exponentialRampToValueAtTime(0.0001,n+4.2);
+    sh.connect(shG);shG.connect(bus);sh.start(n+1.08);sh.stop(n+4.3);
     /* Sub-Boom am Peak */
-    var s2=ac.createOscillator(),s2g=ac.createGain();
-    s2.type='sine';s2.frequency.value=55;
-    s2g.gain.setValueAtTime(0,n+1.08);s2g.gain.linearRampToValueAtTime(0.45,n+1.10);s2g.gain.exponentialRampToValueAtTime(0.001,n+2.3);
-    s2.connect(s2g);s2g.connect(bus);s2.start(n+1.08);s2.stop(n+2.4);
-    /* 2.6s: Ausklingen */
-    stringVoice(ac,n,440,2.6,2.4,0.20).connect(bus);
-    stringVoice(ac,n,554.37,2.6,2.3,0.16).connect(bus);
-    stringVoice(ac,n,659.25,2.75,2.1,0.13).connect(bus);
+    var sb2=ac.createOscillator(),sb2G=ac.createGain();
+    sb2.type='sine';sb2.frequency.value=55;
+    sb2G.gain.setValueAtTime(0,n+1.0);sb2G.gain.linearRampToValueAtTime(0.5,n+1.015);
+    sb2G.gain.exponentialRampToValueAtTime(0.001,n+2.2);
+    sb2.connect(sb2G);sb2G.connect(bus);sb2.start(n+1.0);sb2.stop(n+2.3);
+
+    /* ── 2.30s: Ausklingen — Streicher übernehmen ── */
+    makeStrings(ac,n,440,2.30,2.80,0.22).connect(bus);
+    makeStrings(ac,n,554.37,2.30,2.60,0.18).connect(bus);
+    makeStrings(ac,n,659.25,2.45,2.40,0.14).connect(bus);
+    makeStrings(ac,n,880,2.40,2.20,0.10).connect(bus);
+
   }catch(e){}
 }
 

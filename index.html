@@ -31,6 +31,41 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
   color:rgba(255,255,255,.3);background:transparent;border:none;cursor:pointer;
   padding:10px 14px;-webkit-appearance:none}
 
+/* ═══ PERMISSION SCREEN ═══ */
+#perm-screen{position:fixed;inset:0;z-index:250;
+  background:linear-gradient(165deg,#00001a,#000009);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:calc(32px + var(--st)) 24px calc(40px + var(--sb))}
+#perm-screen.on{display:flex}
+.ps-icon{font-size:52px;margin-bottom:18px;filter:drop-shadow(0 0 18px rgba(0,170,255,.6))}
+.ps-title{font-family:'Cinzel Decorative',serif;font-size:clamp(15px,4.5vw,22px);font-weight:700;
+  letter-spacing:.12em;color:var(--gold);text-align:center;margin-bottom:6px}
+.ps-sub{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:.28em;
+  color:rgba(255,255,255,.28);text-align:center;margin-bottom:24px}
+.ps-div{width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:.3;margin:0 auto 22px}
+.ps-cards{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+.ps-card{background:rgba(212,175,55,.04);border:1px solid rgba(212,175,55,.14);
+  border-radius:3px;padding:13px 15px;display:flex;align-items:flex-start;gap:12px}
+.ps-card-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.ps-card-body{}
+.ps-card-title{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:.18em;
+  color:var(--gold);margin-bottom:3px}
+.ps-card-desc{font-family:'Share Tech Mono',monospace;font-size:8.5px;letter-spacing:.09em;
+  line-height:1.65;color:rgba(255,255,255,.42)}
+.ps-note{font-family:'Share Tech Mono',monospace;font-size:7.5px;letter-spacing:.12em;
+  color:rgba(255,255,255,.25);text-align:center;line-height:1.8;
+  max-width:340px;margin-bottom:22px}
+.ps-btn{width:100%;max-width:400px;padding:15px;font-family:'Cinzel',serif;
+  font-size:clamp(11px,3vw,14px);font-weight:700;letter-spacing:.26em;
+  background:rgba(0,170,255,.08);border:1.5px solid #00aaff;color:#00aaff;
+  cursor:pointer;border-radius:2px;min-height:52px;-webkit-appearance:none;
+  transition:background .2s}
+.ps-btn:active{background:rgba(0,170,255,.18)}
+.ps-skip{width:100%;max-width:400px;padding:10px;margin-top:8px;font-family:'Share Tech Mono',monospace;
+  font-size:8px;letter-spacing:.22em;background:transparent;border:none;
+  color:rgba(255,255,255,.2);cursor:pointer;-webkit-appearance:none}
+
 /* ═══ CONSENT ═══ */
 #consent{position:fixed;inset:0;z-index:200;
   background:linear-gradient(165deg,#00001a,#000009);
@@ -107,6 +142,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 .b-tr{flex:1;height:2.5px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
 .b-fl{height:100%;border-radius:2px;will-change:width;transition:width .3s ease}
 .b-val{font-family:'Share Tech Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.36);width:28px;text-align:right;flex-shrink:0}
+
+/* ═══ PREMIUM SCANNER ELEGANZ ═══ */
+/* Vignette über der Kamera */
+#vignette{position:fixed;inset:0;z-index:4;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%,transparent 38%,rgba(0,0,14,.62) 100%)}
+/* Echtdaten-Badge pulsiert */
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,0)}60%{box-shadow:0 0 0 5px rgba(0,255,136,.12)}}
+#real-badge.on{animation:badgePulse 2.4s ease-in-out infinite}
+/* Bars fließender */
+.b-fl{transition:width .65s cubic-bezier(.4,0,.2,1)}
+/* HUD Metriken: Wert-Flash bei Update */
+@keyframes valFlash{0%{opacity:.55}50%{opacity:1}100%{opacity:1}}
+.f-mv.flash{animation:valFlash .42s ease-out}
+/* Scan-Button Glow-Puls */
+@keyframes btnGlow{0%,100%{box-shadow:0 0 0 0 rgba(212,175,55,0)}50%{box-shadow:0 0 22px 2px rgba(212,175,55,.14)}}
+#btn.scanning{animation:btnGlow 2.2s ease-in-out infinite}
+/* Status-Text: sanfterer Übergang */
+#status-txt{transition:color .9s ease,border-color .9s ease}
+/* Radar: edlerer Rahmen */
+#rc{box-shadow:0 0 18px rgba(212,175,55,.12),inset 0 0 12px rgba(0,0,20,.6)}
 
 /* ═══ RADAR (WALKING SIGNAL MAP) ═══ */
 #rw{position:fixed;z-index:24;display:none;pointer-events:none}
@@ -257,36 +312,82 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
   <button id="skip-btn" onclick="skipIntro()">ÜBERSPRINGEN ›</button>
 </div>
 
+<!-- PERMISSION PRE-SCREEN -->
+<div id="perm-screen">
+  <div class="ps-icon">📡</div>
+  <div class="ps-title">App-Berechtigungen</div>
+  <div class="ps-sub">Für volle Funktionalität benötigt</div>
+  <div class="ps-div"></div>
+  <div class="ps-cards">
+    <div class="ps-card">
+      <div class="ps-card-icon">📷</div>
+      <div class="ps-card-body">
+        <div class="ps-card-title">KAMERA</div>
+        <div class="ps-card-desc">Für das Augmented-Reality-Overlay. Die Kamera wird <strong style="color:rgba(212,175,55,.6)">niemals</strong> aufgezeichnet, gespeichert oder übertragen.</div>
+      </div>
+    </div>
+    <div class="ps-card">
+      <div class="ps-card-icon">🧭</div>
+      <div class="ps-card-body">
+        <div class="ps-card-title">KOMPASS &amp; ORIENTIERUNG</div>
+        <div class="ps-card-desc">Für den Richtungsstrahl und das Heading-Up-Radar. Zeigt an, wohin du dich bewegst.</div>
+      </div>
+    </div>
+    <div class="ps-card">
+      <div class="ps-card-icon">🚶</div>
+      <div class="ps-card-body">
+        <div class="ps-card-title">BEWEGUNGSSENSOREN</div>
+        <div class="ps-card-desc">Für den Schrittzähler im Radar. Erkennt, wenn du durch die Wohnung läufst, um Messpunkte räumlich zu verteilen.</div>
+      </div>
+    </div>
+  </div>
+  <div class="ps-note">
+    Alle Daten bleiben auf deinem Gerät.<br/>
+    Keine externen Server · Keine Weitergabe · DSGVO-konform.<br/>
+    Du kannst Berechtigungen jederzeit in den iOS-Einstellungen widerrufen.
+  </div>
+  <button class="ps-btn" onclick="requestPerms()">⬡ &nbsp; Berechtigungen erlauben &nbsp; ⬡</button>
+  <button class="ps-skip" onclick="skipPerms()">Ohne Sensoren fortfahren</button>
+</div>
+
 <!-- CONSENT -->
 <div id="consent">
   <div class="c-brand">WIPULSCAN · PRO</div>
-  <div class="c-sub">Spatial Signal Visualization &amp; Tracker</div>
+  <div class="c-sub">Network Signal Visualization · Cobra Dynamics</div>
   <div class="c-box">
-    <div class="c-h">LEGAL TERMS &amp; PRIVACY POLICY</div>
+    <div class="c-h">NUTZUNGSBEDINGUNGEN &amp; DATENSCHUTZ</div>
     <div class="c-p">
-      WIPULSCAN PRO von <strong style="color:rgba(212,175,55,.55)">Cobra Dynamics</strong>.
-      Lead Developer: <strong style="color:rgba(212,175,55,.55)">Dennis Stein</strong>,
-      Nördliche Ringstraße 75, 63225 Langen, Germany.<br/><br/>
-      <strong style="color:rgba(212,175,55,.45)">EULA:</strong>
-      Licensed, not sold. Keine Weiterverbreitung.
-      Signaldaten nutzen Browser-APIs (Network Information, Performance, DeviceOrientation).
-      Ergebnisse sind Richtwerte, kein Ersatz für professionelle Netzwerkanalyse.<br/><br/>
+      <strong style="color:rgba(212,175,55,.55)">Herausgeber:</strong> Cobra Dynamics · Dennis Stein
+      · Nördliche Ringstraße 75, 63225 Langen, Germany.<br/><br/>
+      <strong style="color:rgba(212,175,55,.45)">WAS DIE APP MISST:</strong>
+      WIPULSCAN PRO misst <strong style="color:rgba(212,175,55,.6)">echte Netzwerkmetriken</strong>
+      über Browser-APIs: Verbindungstyp (2G/3G/4G/WiFi), geschätzte
+      Download-Geschwindigkeit und RTT (Network Information API), sowie
+      <strong style="color:rgba(212,175,55,.6)">live gemessene Latenz</strong> via anonyme
+      HEAD-Anfragen. Die angezeigten dBm-Werte sind aus diesen Metriken interpoliert —
+      kein direkter Hardware-RSSI-Zugriff (dieser ist in Web-Apps systembedingt
+      nicht verfügbar). Für professionelle RSSI-Messung empfehlen wir native Tools.<br/><br/>
+      <strong style="color:rgba(212,175,55,.45)">BERECHTIGUNGEN:</strong>
+      Kamera (AR-Overlay), Bewegungssensoren (Radar-Schrittzähler),
+      Kompass/Orientierung (Richtungsstrahl). Alle optional, App grundlegend
+      auch ohne nutzbar.<br/><br/>
       <strong style="color:rgba(212,175,55,.45)">DATENSCHUTZ (DSGVO/GDPR):</strong>
-      Nur lokale Verarbeitung. Keine Daten an externe Server.
-      Ping-Messungen sind anonyme HEAD-Anfragen ohne persönliche Daten.
-      Kamera: nur AR-Overlay, nie gespeichert. Daten löschbar (Art. 17).<br/><br/>
-      <strong style="color:rgba(212,175,55,.45)">SICHERHEIT:</strong>
-      Nicht während des Fahrens benutzen. © Cobra Dynamics · 2026.
+      Nur lokale Verarbeitung. Keine persönlichen Daten werden übertragen.
+      Ping-Probes = anonyme HEAD-Anfragen ohne Nutzerdaten.
+      Kamera: nie gespeichert. Datenlöschung via Einstellungen (Art. 17).<br/><br/>
+      <strong style="color:rgba(212,175,55,.45)">LIZENZ:</strong>
+      Lizenziert, nicht verkauft. Reverse Engineering und Weiterverbreitung untersagt.
+      © Cobra Dynamics · 2026. Alle Rechte vorbehalten.
     </div>
   </div>
   <label class="c-chk">
     <input type="checkbox" id="ccb" onchange="document.getElementById('cok').disabled=!this.checked"/>
-    <span>Ich habe EULA und Datenschutz gelesen und akzeptiere diese. Ich bin mindestens 16 Jahre alt (DSGVO Art. 8).</span>
+    <span>Ich habe die Nutzungsbedingungen und Datenschutzerklärung gelesen und akzeptiere diese. Ich bin mindestens 16 Jahre alt (DSGVO Art. 8).</span>
   </label>
   <button class="c-ok" id="cok" disabled onclick="acceptConsent()">
-    ⬡ &nbsp; I ACCEPT · FORTFAHREN &nbsp; ⬡
+    ⬡ &nbsp; AKZEPTIEREN &amp; FORTFAHREN &nbsp; ⬡
   </button>
-  <div class="c-ft">© Cobra Dynamics · 2026 · Dennis Stein · Nördliche Ringstraße 75 · 63225 Langen</div>
+  <div class="c-ft">© Cobra Dynamics · 2026 · Dennis Stein · Nördliche Ringstraße 75 · 63225 Langen · Germany<br/>Datenschutz · Impressum · EULA</div>
 </div>
 
 <!-- AR LAYERS -->
@@ -294,6 +395,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 <canvas id="hmc"></canvas>
 <canvas id="ar"></canvas>
 <div id="sl"></div>
+<div id="vignette"></div>
 <div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>
 
 <!-- HUD -->
@@ -476,9 +578,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
   <div class="st-lbl">Datenschutz · DSGVO</div>
   <div class="st-card"><div class="st-k">DATA PROCESSING</div>
     <div class="st-v">Nur lokal · Keine externen Server · Kein Datentransfer<br/>Kamera: AR-Overlay only · Ping: anonyme HEAD-Anfragen</div></div>
-  <div class="st-lbl">Netzwerk-Engine</div>
-  <div class="st-card"><div class="st-k">NETWORK API</div><div class="st-v" id="st-net">navigator.connection · RTT · downlink</div></div>
-  <div class="st-card"><div class="st-k">RADAR</div><div class="st-v">Dead Reckoning · Kompass + Schrittzähler · heading-up</div></div>
+  <div class="st-lbl">Messdaten · Transparenz</div>
+  <div class="st-card"><div class="st-k">ECHTE DATEN (wenn verfügbar)</div>
+    <div class="st-v">✓ Verbindungstyp (2G/3G/4G/WiFi)<br/>✓ Geschätzte Download-Rate (Mbps)<br/>✓ Geschätzte RTT (Network Info API)<br/>✓ Live-Ping via HEAD-Anfrage (ms)</div></div>
+  <div class="st-card"><div class="st-k">INTERPOLIERTE WERTE</div>
+    <div class="st-v">~ dBm: aus Signal% berechnet (−95 bis −30)<br/>~ SNR: aus RTT + Downlink geschätzt<br/>Direkter Hardware-RSSI ist in Web-Apps<br/>systembedingt nicht zugänglich.</div></div>
+  <div class="st-card"><div class="st-k">RADAR-POSITIONIERUNG</div>
+    <div class="st-v">Dead Reckoning: Kompass + Schrittzähler<br/>~65cm/Schritt · Keine GPS-Nutzung<br/>Genauigkeit: ±1–2m (Wohnraumbereich)</div></div>
   <div class="st-lbl">Version</div>
   <div class="st-card"><div class="st-k">BUILD</div><div class="st-v">WIPULSCAN PRO · v6.0.0 · 2026-04-12</div></div>
   <button class="st-btn danger" onclick="deleteData()">🗑 &nbsp; Alle Daten löschen (DSGVO Art. 17)</button>
@@ -598,7 +704,7 @@ var S={
   scanIv:null,pingIv:null,hapticIv:null,
   frame:0,base:65,basePing:45,
 };
-var LERP_A=.075,COL_A=.055,LP_G=.18,SCAN_MS=550,PING_MS=1800,DOT_DIST=36,DOT_LIFE=30000;
+var LERP_A=.052,COL_A=.038,LP_G=.14,SCAN_MS=700,PING_MS=1800,DOT_DIST=36,DOT_LIFE=30000;
 
 /* ═══ HEATMAP ═══ */
 var hmPts=[],hmDirty=true;
@@ -911,20 +1017,21 @@ var SMSG=[
 function getStatus(v){for(var i=0;i<SMSG.length;i++){var m=SMSG[i];if(v>=m.min&&v<m.max)return m;}return SMSG[0];}
 
 /* DOM-Paint */
+function flash(id){var el=$(id);if(!el)return;el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');}
 function paintDOM(){
   var v=S.dSig,lv=sigLvl(v),co=CLV[lv],hex=co.hex,sig=Math.round(v);
-  $('mv-s').innerHTML=sig+'<span class="f-mu">%</span>';
+  $('mv-s').innerHTML=sig+'<span class="f-mu">%</span>';flash('mv-s');
   $('ms-s').textContent=co.label;
   var dbm=Math.round(S.dDBm);
-  $('mv-d').innerHTML=dbm+'<span class="f-mu">dBm</span>';
+  $('mv-d').innerHTML=dbm+'<span class="f-mu">dBm</span>';flash('mv-d');
   $('ms-d').textContent=dbm>=-50?'Ideal':dbm>=-65?'Gut':dbm>=-75?'OK':'Kritisch';
   $('mv-d').style.color=dbm>=-60?'#00ff88':dbm>=-75?'#d4af37':'#ff3333';
   var snr=Math.round(S.dSNR);
-  $('mv-n').innerHTML=snr+'<span class="f-mu">dB</span>';
+  $('mv-n').innerHTML=snr+'<span class="f-mu">dB</span>';flash('mv-n');
   $('ms-n').textContent=snr>=25?'Rauschfrei':snr>=15?'OK':'Gestört';
   $('mv-n').style.color=snr>=25?'#00ff88':snr>=15?'#d4af37':'#ff3333';
   var pg=NET.ping>0?NET.ping:Math.round(S.dPing);
-  $('mv-p').innerHTML=pg+'<span class="f-mu">ms</span>';
+  $('mv-p').innerHTML=pg+'<span class="f-mu">ms</span>';flash('mv-p');
   $('ms-p').textContent=(NET.ping>0?'◈ GEMESSEN · ':'')+
     (pg<30?'Ausgezeichnet':pg<80?'Gut':pg<150?'Mittel':'Hoch');
   $('mv-p').style.color=pg<30?'#00ff88':pg<80?'#d4af37':'#ff3333';
@@ -1124,24 +1231,20 @@ function posUI(){
 }
 
 /* ═══════════════════════════════════════════════
-   CINEMATIC INTRO v4 — GARANTIERT SICHTBAR
+   CINEMATIC INTRO v4.1 — VERLÄNGERT
 
-   Das #intro-Element ist IMMER im DOM sichtbar
-   (kein display:none). Wir setzen nur opacity am
-   Ende auf 0 und dann display:none.
-
-   Ablauf:
-   0.0–0.4s  Schwarz (blackout)
-   0.4–1.4s  Blaues WiFi wächst herein (elastic)
-   1.4–2.0s  "Cobra Dynamics presents" erscheint
-   2.0–2.7s  Erster großer Puls (Bass)
-   2.7–3.4s  Zweiter Puls (Sonar)
-   3.4–4.2s  "WIPULSCAN · PRO" Titel-Drop
-   4.2–4.8s  Hold
-   4.8–5.8s  Iris-Reveal + Fragmente
+   0.0–0.4s   Schwarz
+   0.4–1.4s   WiFi wächst herein (elastic)
+   1.4–2.2s   "Cobra Dynamics presents" erscheint
+   2.2–5.4s   *** 3.2s sichtbares Pulsieren ***
+   5.4–6.1s   Erster großer Puls (Bass)
+   6.1–6.8s   Zweiter Puls (Sonar)
+   6.8–7.6s   "WIPULSCAN · PRO" Titel-Drop
+   7.6–8.2s   Hold — alles sichtbar
+   8.2–9.4s   Iris-Reveal + Fragmente
 ═══════════════════════════════════════════════ */
 var CI={ctx:null,W:0,H:0,start:0,running:false,bass:false,sonar:false,ac:null,frags:[],fragsOk:false,raf:0};
-var CT={T0:0,T1:400,T2:1400,T3:2000,T4:2700,T5:2700,T6:3400,T7:3400,T8:4200,T9:4800,T10:5800};
+var CT={T0:0,T1:400,T2:1400,T3:2200,T4:5400,T5:6100,T6:6100,T7:6800,T8:7600,T9:8200,T10:9400};
 var CBLUE='#00aaff',CBLUEG='rgba(0,170,255,';
 
 /* Audio */
@@ -1214,94 +1317,173 @@ function ciLoop(now){
   if(!CI.running)return;
   CI.raf=requestAnimationFrame(ciLoop);
   var c=CI.ctx,W=CI.W,H=CI.H,t=now-CI.start;
-  var cx=W*.5,cy=H*.44,R=Math.min(W,H)*.38;
-  var fs=Math.round(Math.min(W,H)*.062);
+  /* Logo etwas höher zentriert — gibt Titel mehr Luft */
+  var cx=W*.5,cy=H*.42,R=Math.min(W,H)*.43;
+  var fs=Math.round(Math.min(W,H)*.072);
   c.clearRect(0,0,W,H);c.fillStyle='#000';c.fillRect(0,0,W,H);
 
-  /* Hintergrund-Glow (ab T1) */
+  /* ── Hintergrund-Kosmos (ab T1): subtile Gold-Sterne + blauer Nebel ── */
   if(t>=CT.T1){
-    var gA=.04+Math.abs(Math.sin(t*.0028))*.08;
-    var bg=c.createRadialGradient(cx,cy,0,cx,cy,R*1.7);
-    bg.addColorStop(0,CBLUEG+(gA*1.2)+')');bg.addColorStop(.5,CBLUEG+(gA*.5)+')');bg.addColorStop(1,CBLUEG+'0)');
-    c.beginPath();c.arc(cx,cy,R*1.7,0,Math.PI*2);c.fillStyle=bg;c.fill();
-  }
+    /* Blauer Nebel-Glow */
+    var nebulaA=Math.min((t-CT.T1)/1200,.1)+Math.abs(Math.sin(t*.0018))*.06;
+    var nebula=c.createRadialGradient(cx,cy,0,cx,cy,R*2.1);
+    nebula.addColorStop(0,CBLUEG+(nebulaA*1.4)+')');
+    nebula.addColorStop(.45,CBLUEG+(nebulaA*.5)+')');
+    nebula.addColorStop(1,CBLUEG+'0)');
+    c.beginPath();c.arc(cx,cy,R*2.1,0,Math.PI*2);c.fillStyle=nebula;c.fill();
 
-  /* WiFi-Symbol */
-  if(t>=CT.T1){
-    var wA=1,wS=1,wG=2+Math.sin(t*.003)*.8;
-    if(t<CT.T2){
-      /* Wächst herein */
-      var p=(t-CT.T1)/(CT.T2-CT.T1);
-      var s=ciElastic(Math.min(p,1));wA=Math.min(s*1.7,1);wS=s;wG=s*2.5;
-    }else if(t>=CT.T3&&t<CT.T4){
-      /* Puls 1 */
-      var p=(t-CT.T3)/(CT.T4-CT.T3);wG=2.5+Math.sin(p*Math.PI)*5;wS=1+Math.sin(p*Math.PI)*.04;
-    }else if(t>=CT.T5&&t<CT.T6){
-      /* Puls 2 */
-      var p=(t-CT.T5)/(CT.T6-CT.T5);wG=2.5+Math.sin(p*Math.PI)*6;wS=1+Math.sin(p*Math.PI)*.04;
-    }else if(t>=CT.T8){
-      /* Iris: verblasst */
-      wA=Math.max(0,1-(t-CT.T8)/(CT.T9-CT.T8)*2.8);
-    }
-    if(wA>0)ciWifi(cx,cy,R*wS,CBLUE,wA,wG);
-  }
-
-  /* "Cobra Dynamics presents" */
-  if(t>=CT.T2){
-    var pA=Math.min((t-CT.T2)/600,1);
-    if(t>=CT.T7)pA=Math.max(0,pA-(t-CT.T7)/400);
-    if(pA>0){
-      c.save();c.globalAlpha=pA*.7;c.fillStyle='#66ccff';
-      c.font='400 '+Math.round(fs*.37)+'px Share Tech Mono,monospace';
-      c.textAlign='center';c.textBaseline='middle';
-      c.shadowColor=CBLUE;c.shadowBlur=8*pA;
-      c.fillText('COBRA DYNAMICS PRESENTS',cx,cy+R*.94);c.restore();
-    }
-  }
-
-  /* Puls-Ringe */
-  if(t>=CT.T3&&t<CT.T4){
-    if(!CI.bass){ciBass();CI.bass=true;}
-    var p=(t-CT.T3)/(CT.T4-CT.T3);var ft=Math.sin(p*Math.PI);
-    var r1=R*(1+p*1.0),r2=R*(1+p*1.55);
-    c.beginPath();c.arc(cx,cy,r1,0,Math.PI*2);c.strokeStyle=CBLUEG+(1-p)*.7+')';c.lineWidth=6*(1-p*.7);c.stroke();
-    c.beginPath();c.arc(cx,cy,r2,0,Math.PI*2);c.strokeStyle=CBLUEG+(1-p)*.35+')';c.lineWidth=3*(1-p);c.stroke();
-    c.fillStyle=CBLUEG+(ft*.08)+')';c.fillRect(0,0,W,H);
-  }
-  if(t>=CT.T5&&t<CT.T6){
-    if(!CI.sonar){ciSonar();CI.sonar=true;}
-    var p=(t-CT.T5)/(CT.T6-CT.T5);var ft=Math.sin(p*Math.PI);
-    for(var ri=0;ri<3;ri++){
-      var rpt=Math.max(0,p-ri*.17);if(rpt<=0)continue;
-      c.beginPath();c.arc(cx,cy,R*(1+rpt*1.1),0,Math.PI*2);
-      c.strokeStyle=CBLUEG+Math.max(0,(1-rpt)*.5)+')';c.lineWidth=3.5*Math.max(0,1-rpt*1.4);c.stroke();
-    }
-    c.fillStyle=CBLUEG+(ft*.07)+')';c.fillRect(0,0,W,H);
-  }
-
-  /* Titel-Drop */
-  if(t>=CT.T7){
-    var p=ciE3(Math.min((t-CT.T7)/(CT.T8-CT.T7),1));
-    var tY=lerp(cy+R*1.85,cy-R*1.15,p),tA=Math.min(p*1.8,1);
-    if(t>=CT.T8){var fade=(t-CT.T8)/(CT.T9-CT.T8);tA=Math.max(0,tA-fade*3);}
-    if(tA>0){
-      c.save();c.shadowColor='#d4af37';c.shadowBlur=Math.round(20*p);c.globalAlpha=tA;
-      c.fillStyle='#f5e070';c.font='700 '+fs+'px Cinzel Decorative,Cinzel,serif';
-      c.textAlign='center';c.textBaseline='middle';c.fillText('WIPULSCAN · PRO',cx,tY);c.restore();
-      var sA=Math.max(0,(p-.6)*2.5);if(sA>0){
-        c.save();c.globalAlpha=sA*.45;c.fillStyle='#aaa';
-        c.font='400 '+Math.round(fs*.37)+'px Share Tech Mono,monospace';
-        c.textAlign='center';c.textBaseline='middle';
-        c.fillText('SPATIAL SIGNAL VISUALIZATION · PRO',cx,tY+fs*.82);c.restore();
+    /* Goldstaub — 40 schwebende Partikel, Phi-Winkel-Verteilung */
+    var dustFade=Math.min((t-CT.T1)/1800,1);
+    if(dustFade>0){
+      for(var di=0;di<40;di++){
+        var dAngle=di*2.39996*(Math.PI*2); /* goldener Winkel */
+        var dRadius=(0.35+((di*17)%10)/10*0.8)*R;
+        var dOscX=Math.sin(t*.00062+di*.8)*R*.04;
+        var dOscY=Math.cos(t*.00048+di*1.1)*R*.06;
+        var dx=cx+Math.cos(dAngle)*dRadius+dOscX;
+        var dy=cy+Math.sin(dAngle)*dRadius+dOscY;
+        var dBright=(.3+((di*7)%10)/10*.5)*dustFade;
+        var dSize=0.6+((di*3)%5)*.35;
+        c.beginPath();c.arc(dx,dy,dSize,0,Math.PI*2);
+        c.fillStyle='rgba(212,175,55,'+dBright+')';c.fill();
       }
     }
   }
 
-  /* Iris-Reveal */
+  /* ── WiFi-Symbol ── */
+  if(t>=CT.T1){
+    var wA=1,wS=1,wG=2.5+Math.sin(t*.003)*.8;
+    if(t<CT.T2){
+      /* Wächst herein — elastic + leichter Glow-Burst */
+      var p=(t-CT.T1)/(CT.T2-CT.T1);
+      var s=ciElastic(Math.min(p,1));wA=Math.min(s*1.8,1);wS=s*.98+.02;wG=s*3;
+    }else if(t>=CT.T3&&t<CT.T4){
+      /* ★ ATEMPHASE ★ — 3.2s sichtbares rhythmisches Pulsieren */
+      var bt=(t-CT.T3)/1000;
+      /* Langsames sanftes Atmen (0.8 Hz), gut lesbar */
+      var breathSin=Math.sin(bt*Math.PI*.85-.3);
+      var breathNorm=breathSin*.5+.5;           /* 0→1 */
+      wG=2.0+breathNorm*6.0;                    /* 2 → 8 glow */
+      wS=1+breathNorm*.028;
+      /* 2 versetzte Pulsringe */
+      var bt1=(bt*.85)%1,bt2=(bt*.85+.5)%1;
+      c.beginPath();c.arc(cx,cy,R*(1+bt1*.6),0,Math.PI*2);
+      c.strokeStyle=CBLUEG+((1-bt1)*.5)+')';c.lineWidth=3*(1-bt1);c.stroke();
+      c.beginPath();c.arc(cx,cy,R*(1+bt2*.6),0,Math.PI*2);
+      c.strokeStyle=CBLUEG+((1-bt2)*.25)+')';c.lineWidth=1.8*(1-bt2);c.stroke();
+      /* Innerer Glow-Fill */
+      var igA=breathNorm*.06;
+      var ig=c.createRadialGradient(cx,cy,0,cx,cy,R);
+      ig.addColorStop(0,CBLUEG+igA+')');ig.addColorStop(1,CBLUEG+'0)');
+      c.beginPath();c.arc(cx,cy,R,0,Math.PI*2);c.fillStyle=ig;c.fill();
+    }else if(t>=CT.T4&&t<CT.T5){
+      var p=(t-CT.T4)/(CT.T5-CT.T4);wG=3+Math.sin(p*Math.PI)*6;wS=1+Math.sin(p*Math.PI)*.04;
+    }else if(t>=CT.T5&&t<CT.T6+700){
+      var p=(t-CT.T5)/700;wG=3+Math.sin(p*Math.PI)*7;wS=1+Math.sin(p*Math.PI)*.04;
+    }else if(t>=CT.T8){
+      wA=Math.max(0,1-(t-CT.T8)/(CT.T9-CT.T8)*3.2);
+    }
+    if(wA>0)ciWifi(cx,cy,R*wS,CBLUE,wA,wG);
+  }
+
+  /* ── "Cobra Dynamics presents" — sichtbarer, eleganter ── */
+  if(t>=CT.T2){
+    var pA=ciE3(Math.min((t-CT.T2)/700,1));
+    /* Bleibt bis Titel-Drop sichtbar, blendet dann sanft aus */
+    if(t>=CT.T7+200)pA=Math.max(0,pA-ciE3((t-CT.T7-200)/500));
+    if(pA>0){
+      c.save();c.globalAlpha=pA;
+      /* Hauch goldener Schimmer oben */
+      c.fillStyle='rgba(212,175,55,'+(pA*.18)+')';
+      c.font='400 '+Math.round(fs*.32)+'px Share Tech Mono,monospace';
+      c.textAlign='center';c.textBaseline='middle';
+      c.shadowColor='rgba(212,175,55,.4)';c.shadowBlur=6*pA;
+      c.letterSpacing='.38em';
+      c.fillText('COBRA DYNAMICS',cx,cy+R*.82);
+      /* Blauer Haupttext */
+      c.shadowColor=CBLUE;c.shadowBlur=12*pA;
+      c.fillStyle='rgba(120,200,255,'+(pA*.85)+')';
+      c.font='600 '+Math.round(fs*.38)+'px Share Tech Mono,monospace';
+      c.fillText('P R E S E N T S',cx,cy+R*.98);
+      c.restore();
+    }
+  }
+
+  /* ── Puls-Ringe ── */
+  if(t>=CT.T4&&t<CT.T5){
+    if(!CI.bass){ciBass();CI.bass=true;}
+    var p=(t-CT.T4)/(CT.T5-CT.T4),ft=Math.sin(p*Math.PI);
+    c.beginPath();c.arc(cx,cy,R*(1+p*1.1),0,Math.PI*2);c.strokeStyle=CBLUEG+(1-p)*.72+')';c.lineWidth=7*(1-p*.6);c.stroke();
+    c.beginPath();c.arc(cx,cy,R*(1+p*1.7),0,Math.PI*2);c.strokeStyle=CBLUEG+(1-p)*.35+')';c.lineWidth=3.5*(1-p);c.stroke();
+    c.fillStyle=CBLUEG+(ft*.1)+')';c.fillRect(0,0,W,H);
+  }
+  if(t>=CT.T5&&t<CT.T7){
+    if(!CI.sonar){ciSonar();CI.sonar=true;}
+    var p=(t-CT.T5)/(CT.T7-CT.T5),ft=Math.sin(p*Math.PI);
+    for(var ri=0;ri<4;ri++){
+      var rpt=Math.max(0,p-ri*.16);if(rpt<=0)continue;
+      c.beginPath();c.arc(cx,cy,R*(1+rpt*1.2),0,Math.PI*2);
+      c.strokeStyle=CBLUEG+Math.max(0,(1-rpt)*.55)+')';c.lineWidth=4*Math.max(0,1-rpt*1.3);c.stroke();
+    }
+    c.fillStyle=CBLUEG+(ft*.08)+')';c.fillRect(0,0,W,H);
+  }
+
+  /* ── WIPULSCAN · PRO  Titel — groß, dramatisch, edel ── */
+  if(t>=CT.T7){
+    var p=ciE3(Math.min((t-CT.T7)/(CT.T8-CT.T7),1));
+    /* Einzug von unten */
+    var tY=lerp(cy+R*1.6,cy-R*1.08,p);
+    /* Sichtbar bis weit in die Iris-Phase hinein */
+    var tA=Math.min(p*2,1);
+    if(t>=CT.T8){
+      var irisP=(t-CT.T8)/(CT.T10-CT.T8);
+      tA=Math.max(0,1-Math.pow(Math.max(0,irisP-.35)/.65,1.5));
+    }
+    if(tA>0){
+      /* Goldener Glow-Halo hinter dem Titel */
+      c.save();c.globalAlpha=tA*.35;
+      var hg=c.createRadialGradient(cx,tY,0,cx,tY,R*1.1);
+      hg.addColorStop(0,'rgba(212,175,55,.22)');hg.addColorStop(1,'rgba(212,175,55,0)');
+      c.fillStyle=hg;c.fillRect(cx-R*1.1,tY-R*.4,R*2.2,R*.8);
+      c.restore();
+      /* Haupttitel */
+      c.save();
+      c.shadowColor='rgba(212,175,55,.9)';c.shadowBlur=Math.round(32*p*tA);
+      c.globalAlpha=tA;
+      c.fillStyle='#f5e070';
+      c.font='700 '+fs+'px Cinzel Decorative,Cinzel,serif';
+      c.textAlign='center';c.textBaseline='middle';
+      c.fillText('WIPULSCAN · PRO',cx,tY);
+      /* Zweiter Glow-Pass für Tiefe */
+      c.shadowColor='rgba(255,255,200,.7)';c.shadowBlur=8*tA;
+      c.globalAlpha=tA*.45;c.fillStyle='#fff';
+      c.fillText('WIPULSCAN · PRO',cx,tY);
+      c.restore();
+      /* Elegante goldene Trennlinie darunter */
+      var lineA=Math.min(tA,(p-.3)/.7);
+      if(lineA>0){
+        c.save();c.globalAlpha=lineA*.7;
+        var lg=c.createLinearGradient(cx-R*.8,0,cx+R*.8,0);
+        lg.addColorStop(0,'rgba(212,175,55,0)');
+        lg.addColorStop(.2,'rgba(245,224,112,.6)');
+        lg.addColorStop(.5,'rgba(255,240,140,1)');
+        lg.addColorStop(.8,'rgba(245,224,112,.6)');
+        lg.addColorStop(1,'rgba(212,175,55,0)');
+        c.strokeStyle=lg;c.lineWidth=.8;
+        c.beginPath();c.moveTo(cx-R*.8,tY+fs*.68);c.lineTo(cx+R*.8,tY+fs*.68);c.stroke();
+        /* Subline */
+        c.globalAlpha=lineA*.5;c.fillStyle='rgba(212,175,55,.65)';
+        c.font='400 '+Math.round(fs*.3)+'px Share Tech Mono,monospace';
+        c.textAlign='center';c.textBaseline='middle';
+        c.fillText('S P A T I A L   S I G N A L   V I S U A L I Z A T I O N',cx,tY+fs*.68+Math.round(fs*.3)+6);
+        c.restore();
+      }
+    }
+  }
+
+  /* ── Iris-Reveal ── */
   if(t>=CT.T8){
-    var p=Math.min((t-CT.T8)/(CT.T10-CT.T8),1);
-    var eT=ciEIO(p);
-    /* Fragmente beim ersten Frame generieren */
+    var p=Math.min((t-CT.T8)/(CT.T10-CT.T8),1),eT=ciEIO(p);
     if(!CI.fragsOk){ciMakeFrags(cx,cy);CI.fragsOk=true;}
     CI.frags=CI.frags.filter(function(f){return f.life>0;});
     CI.frags.forEach(function(f){
@@ -1319,15 +1501,20 @@ function ciLoop(now){
 }
 
 function ciStart(){
-  /* Canvas-Größe setzen (Intro ist immer sichtbar → keine display:none Probleme) */
-  var ic=$('ic');
+  var ic=$('ic'),el=$('intro');
+  if(!ic||!el){if(typeof enterScanner==='function')enterScanner(true);return;}
+  /* Sicherstellen dass Intro sichtbar ist */
+  el.style.display='block';
+  el.style.opacity='1';
+  el.style.transition='';
   var dpr=window.devicePixelRatio||1;
   CI.W=window.innerWidth;CI.H=window.innerHeight;
   ic.width=Math.round(CI.W*dpr);ic.height=Math.round(CI.H*dpr);
   ic.style.width=CI.W+'px';ic.style.height=CI.H+'px';
   CI.ctx=ic.getContext('2d');
+  CI.ctx.setTransform(1,0,0,1,0,0);
   CI.ctx.scale(dpr,dpr);
-  /* Sofort schwarz */
+  /* Sofort schwarz füllen */
   CI.ctx.fillStyle='#000';CI.ctx.fillRect(0,0,CI.W,CI.H);
   CI.bass=false;CI.sonar=false;CI.fragsOk=false;CI.frags=[];
   CI.running=true;
@@ -1348,11 +1535,42 @@ function ciDone(){
 window.skipIntro=function(){
   if(!CI.running)return;
   CI.running=false;cancelAnimationFrame(CI.raf);
-  var el=$('intro');
+  var el=$('intro');if(!el){enterScanner(true);return;}
   el.style.transition='opacity .25s ease';el.style.opacity='0';
-  setTimeout(function(){el.style.display='none';},260);
-  enterScanner(true);
+  setTimeout(function(){el.style.display='none';enterScanner(true);},260);
 };
+
+/* ═══ BERECHTIGUNGEN ═══ */
+window.requestPerms=async function(){
+  var btn=document.querySelector('.ps-btn');
+  if(btn)btn.textContent='⬡  Wird angefragt…  ⬡';
+  /* 1. DeviceOrientationEvent (iOS 13+) */
+  if(typeof DeviceOrientationEvent!=='undefined'&&
+     typeof DeviceOrientationEvent.requestPermission==='function'){
+    try{await DeviceOrientationEvent.requestPermission();}catch(e){}
+  }
+  /* 2. DeviceMotionEvent (iOS 13+) */
+  if(typeof DeviceMotionEvent!=='undefined'&&
+     typeof DeviceMotionEvent.requestPermission==='function'){
+    try{
+      var state=await DeviceMotionEvent.requestPermission();
+      if(state==='granted'){S.hasMotion=true;addEventListener('devicemotion',onMotion,{passive:true});}
+    }catch(e){}
+  }else{
+    /* Android/Desktop: kein requestPermission nötig */
+    S.hasMotion=true;addEventListener('devicemotion',onMotion,{passive:true});
+  }
+  hidePerm();
+};
+window.skipPerms=function(){hidePerm();};
+function hidePerm(){
+  var ps=$('perm-screen');if(!ps)return;
+  ps.style.transition='opacity .38s ease';ps.style.opacity='0';
+  setTimeout(function(){
+    ps.classList.remove('on');ps.style.display='none';
+    ciStart(); /* ciStart macht Intro sichtbar */
+  },400);
+}
 
 /* ═══ FLOW ═══ */
 window.acceptConsent=function(){
@@ -1360,7 +1578,13 @@ window.acceptConsent=function(){
   var el=$('consent');
   el.style.transition='opacity .7s,transform .7s';
   el.style.opacity='0';el.style.transform='scale(1.04)';
-  setTimeout(function(){el.style.display='none';ciStart();},720);
+  setTimeout(function(){
+    el.style.display='none';
+    /* Intro bleibt display:none — ciStart() macht es sichtbar */
+    var ps=$('perm-screen');
+    if(ps){ps.style.display='flex';setTimeout(function(){ps.classList.add('on');},20);}
+    else{ciStart();}
+  },720);
 };
 
 async function enterScanner(autoScan){
@@ -1403,20 +1627,25 @@ if(localStorage.getItem('wps_pro')==='1'){
 }
 
 /* ═══ BOOT ═══ */
+function showPermScreen(){
+  var ps=$('perm-screen');
+  if(ps){ps.style.display='flex';setTimeout(function(){ps.classList.add('on');},20);}
+  else{ciStart();}
+}
+
 if(localStorage.getItem('wps_consent')==='1'){
-  /* Consent bereits erteilt → direkt Intro */
   $('consent').style.display='none';
-  window.addEventListener('load',function(){ciStart();},{ once:true });
+  /* Perm-Screen zeigen — load-Event oder sofort wenn schon geladen */
+  if(document.readyState==='complete'){
+    showPermScreen();
+  }else{
+    window.addEventListener('load',showPermScreen,{once:true});
+  }
 }else{
-  /* Intro hinter Consent verstecken bis Consent fertig */
-  $('intro').style.opacity='0';
+  /* Intro liegt hinter Consent (z-index 200 > 300? nein — wir verstecken
+     Intro via display:none bis nach Consent, Perm und kurz vor ciStart) */
+  $('intro').style.display='none';
   $('consent').style.display='flex';
-  /* acceptConsent() macht opacity wieder sichtbar via ciStart() */
-  window.acceptConsent=(function(orig){
-    return function(){
-      $('intro').style.opacity='1';orig();
-    };
-  })(window.acceptConsent);
 }
 
 })();

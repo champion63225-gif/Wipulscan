@@ -1165,12 +1165,10 @@ function loop(now){
   S.tr=rgb[0];S.tg=rgb[1];S.tb=rgb[2];
   S.cr=lerp(S.cr,S.tr,COL_A);S.cg=lerp(S.cg,S.tg,COL_A);S.cb=lerp(S.cb,S.tb,COL_A);
 
-  if(S.hasGyro){
-    vecTarget=S.smoothGamma*0.018;
-    vecTarget=clamp(vecTarget,-Math.PI*0.3,Math.PI*0.3);
-  }else{
-    vecTarget=Math.sin(now*0.0004)*0.5;
-  }
+  /* Pfeil immer nach oben = Laufrichtung (Canvas-Winkel -PI/2 = oben).
+     Leichte Gyro-Korrektur für dynamischen Look. */
+  vecTarget = -Math.PI * 0.5;
+  if(S.hasGyro){ vecTarget += clamp(S.smoothGamma * 0.005, -0.2, 0.2); }
 
   if(S.heatmapOn) renderHeatmap();
 
@@ -1251,7 +1249,8 @@ function measure(){
        Durch die Heading-Up-Rotation des Radars erscheint
        dieser Punkt immer leicht vorne (12-Uhr-Richtung). */
     var bearing = RADAR.heading;
-    var fwdDist = 0.08 + Math.random()*0.12;
+    /* Dots über den ganzen Radar verteilen: 25–80% Radius */
+    var fwdDist = 0.25 + Math.random()*0.55;
     radarAddPoint(bearing, fwdDist, S.tSig);
 
     if(S.proUnlocked){
@@ -1380,487 +1379,309 @@ window.acceptConsent=function(){
 };
 
 /* ═══════════════════════════════════════════════════════════
-   CINEMATIC INTRO ENGINE v3.0
-   Ablauf:
-     1. Schwarz
-     2. Blaues WiFi-Symbol wächst herein (Elastic)
-     3. "Cobra Dynamics presents" blendet darunter ein
-     4. WiFi pulsiert sanft (Atemeffekt)
-     5. Erster großer blauer Puls-Ring + Bass-Sound
-     6. Kurze Pause
-     7. Zweiter Puls + Sonar-Sound
-     8. "WIPULSCAN · PRO" Titel-Drop von unten
-     9. Hold — alles sichtbar
-    10. Iris-Reveal → Scanner (mit Fragmenten)
+   CINEMATIC INTRO ENGINE v3.1 — Blaues WiFi-Symbol
+   Absolute Zeitwerte (ms):
+     0    → 400   Schwarz
+     400  → 1300  Blaues WiFi wächst herein (Elastic)
+     1300 → 1900  "Cobra Dynamics presents" einblenden
+     1900 → 2600  Puls 1 + Bass-Sound
+     2600 → 2900  Pause
+     2900 → 3600  Puls 2 + Sonar-Sound
+     3600 → 4400  "WIPULSCAN · PRO" von unten
+     4400 → 5000  Hold
+     5000 → 6100  Iris-Reveal + blaue Fragmente
 ═══════════════════════════════════════════════════════════ */
+var CI={running:false,skipped:false,raf:null,ctx:null,W:0,H:0,start:0,
+  bassPlayed:false,sonarPlayed:false,ac:null,fragsGenerated:false};
 
-/* ── WiFi-Farben (blau) ── */
-var CI_BLUE      = '#00aaff';
-var CI_BLUE_LT   = '#66ccff';
-var CI_BLUE_GLOW = 'rgba(0,170,255,';
+/* Absolute Zeitgrenzen — keine Phasen-Mathe, kein CIP-Bug */
+var CT={T1:400,T2:1300,T3:1900,T4:2600,T5:2900,T6:3600,T7:4400,T8:5000,T9:6100};
 
-var CI = {
-  running: false,
-  skipped: false,
-  raf: null,
-  ctx: null,
-  W: 0, H: 0,
-  start: 0,
-  bassPlayed: false,
-  sonarPlayed: false,
-  ac: null,
-  fragsGenerated: false,
-};
-
-/* Phasenlängen in ms */
-var CIT = {
-  blackout:  350,   /* Schwarz */
-  wifishow:  920,   /* WiFi wächst herein */
-  presents:  520,   /* "Cobra Dynamics presents" erscheint */
-  breathe:   480,   /* Sanftes Pulsieren */
-  pulse1:    680,   /* Erster großer Puls */
-  pgap:      220,   /* Pause */
-  pulse2:    680,   /* Zweiter Puls */
-  tgap:      260,   /* Pause */
-  titledrop: 740,   /* WIPULSCAN · PRO */
-  hold:      540,   /* Alles sichtbar */
-  iris:     1050,   /* Iris-Reveal */
-};
-
-var CIP = {};
-function cisBuild(){
-  var t = 0;
-  ['blackout','wifishow','presents','breathe','pulse1','pgap','pulse2',
-   'tgap','titledrop','hold','iris'].forEach(function(k){
-    CIP[k] = t; t += CIT[k];
-  });
-  CIP.total = t;
-}
-
-/* ── Audio ── */
-function ciAudio(){
-  try{
-    var A = window.AudioContext || window.webkitAudioContext;
-    CI.ac = new A();
-  }catch(e){}
-}
+function ciAudio(){try{var A=window.AudioContext||window.webkitAudioContext;CI.ac=new A();}catch(e){}}
 
 function ciBass(){
-  if(!CI.ac) return;
+  if(!CI.ac)return;
   try{
-    if(CI.ac.state==='suspended') CI.ac.resume();
+    if(CI.ac.state==='suspended')CI.ac.resume();
     var n=CI.ac.currentTime;
-    var o=CI.ac.createOscillator(), g=CI.ac.createGain();
-    o.type='sine';
-    o.frequency.setValueAtTime(60,n);
-    o.frequency.exponentialRampToValueAtTime(30,n+0.5);
-    g.gain.setValueAtTime(0,n);
-    g.gain.linearRampToValueAtTime(0.7,n+0.025);
-    g.gain.exponentialRampToValueAtTime(0.001,n+0.6);
-    o.connect(g); g.connect(CI.ac.destination);
-    o.start(n); o.stop(n+0.65);
-    /* Obertonschicht */
-    var o2=CI.ac.createOscillator(), g2=CI.ac.createGain();
-    o2.type='triangle';
-    o2.frequency.setValueAtTime(120,n);
-    o2.frequency.exponentialRampToValueAtTime(60,n+0.32);
-    g2.gain.setValueAtTime(0.2,n);
-    g2.gain.exponentialRampToValueAtTime(0.001,n+0.45);
-    o2.connect(g2); g2.connect(CI.ac.destination);
-    o2.start(n); o2.stop(n+0.5);
+    var o=CI.ac.createOscillator(),g=CI.ac.createGain();
+    o.type='sine';o.frequency.setValueAtTime(60,n);o.frequency.exponentialRampToValueAtTime(30,n+0.5);
+    g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(0.7,n+0.025);g.gain.exponentialRampToValueAtTime(0.001,n+0.6);
+    o.connect(g);g.connect(CI.ac.destination);o.start(n);o.stop(n+0.65);
+    var o2=CI.ac.createOscillator(),g2=CI.ac.createGain();
+    o2.type='triangle';o2.frequency.setValueAtTime(120,n);o2.frequency.exponentialRampToValueAtTime(60,n+0.32);
+    g2.gain.setValueAtTime(0.2,n);g2.gain.exponentialRampToValueAtTime(0.001,n+0.45);
+    o2.connect(g2);g2.connect(CI.ac.destination);o2.start(n);o2.stop(n+0.5);
   }catch(e){}
 }
 
 function ciSonar(){
-  if(!CI.ac) return;
+  if(!CI.ac)return;
   try{
-    if(CI.ac.state==='suspended') CI.ac.resume();
+    if(CI.ac.state==='suspended')CI.ac.resume();
     var n=CI.ac.currentTime;
-    var o=CI.ac.createOscillator(), g=CI.ac.createGain();
-    var f=CI.ac.createBiquadFilter();
-    o.type='sine';
-    o.frequency.setValueAtTime(1800,n);
-    o.frequency.exponentialRampToValueAtTime(900,n+0.3);
-    f.type='bandpass'; f.frequency.value=1400; f.Q.value=3;
-    g.gain.setValueAtTime(0,n);
-    g.gain.linearRampToValueAtTime(0.5,n+0.015);
-    g.gain.exponentialRampToValueAtTime(0.001,n+0.45);
-    o.connect(f); f.connect(g); g.connect(CI.ac.destination);
-    o.start(n); o.stop(n+0.5);
-    /* Echo */
-    var o3=CI.ac.createOscillator(), g3=CI.ac.createGain();
-    o3.type='sine';
-    o3.frequency.setValueAtTime(900,n+0.08);
-    o3.frequency.exponentialRampToValueAtTime(450,n+0.35);
-    g3.gain.setValueAtTime(0,n+0.08);
-    g3.gain.linearRampToValueAtTime(0.18,n+0.1);
-    g3.gain.exponentialRampToValueAtTime(0.001,n+0.5);
-    o3.connect(g3); g3.connect(CI.ac.destination);
-    o3.start(n+0.08); o3.stop(n+0.55);
+    var o=CI.ac.createOscillator(),g=CI.ac.createGain(),f=CI.ac.createBiquadFilter();
+    o.type='sine';o.frequency.setValueAtTime(1800,n);o.frequency.exponentialRampToValueAtTime(900,n+0.3);
+    f.type='bandpass';f.frequency.value=1400;f.Q.value=3;
+    g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(0.5,n+0.015);g.gain.exponentialRampToValueAtTime(0.001,n+0.45);
+    o.connect(f);f.connect(g);g.connect(CI.ac.destination);o.start(n);o.stop(n+0.5);
+    var o3=CI.ac.createOscillator(),g3=CI.ac.createGain();
+    o3.type='sine';o3.frequency.setValueAtTime(900,n+0.08);o3.frequency.exponentialRampToValueAtTime(450,n+0.35);
+    g3.gain.setValueAtTime(0,n+0.08);g3.gain.linearRampToValueAtTime(0.18,n+0.1);g3.gain.exponentialRampToValueAtTime(0.001,n+0.5);
+    o3.connect(g3);g3.connect(CI.ac.destination);o3.start(n+0.08);o3.stop(n+0.55);
   }catch(e){}
 }
 
-/* ── Easing ── */
-function ciEaseOut3(t){ return 1-Math.pow(1-t,3); }
-function ciEaseInOut(t){ return t<0.5?2*t*t:-1+(4-2*t)*t; }
+function ciEaseOut3(t){return 1-Math.pow(1-t,3);}
+function ciEaseInOut(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
 function ciElastic(t){
-  if(t<=0||t>=1) return t;
+  if(t<=0||t>=1)return t;
   return Math.pow(2,-10*t)*Math.sin((t*10-0.75)*(2*Math.PI)/3)+1;
 }
 
-/* ── WiFi-Symbol zeichnen ──
-   cx/cy = Mittelpunkt der Bögen,
-   maxR  = Radius des äußersten Bogens,
-   col   = Farbe (CSS-String),
-   alpha = Gesamt-Transparenz (0–1),
-   glow  = Glow-Intensität (0–3+)
-*/
-function ciWifi(cx, cy, maxR, col, alpha, glow){
-  if(alpha<=0||maxR<2) return;
+/* Blaues WiFi-Symbol */
+function ciWifi(cx,cy,R,col,alpha,glow){
+  if(alpha<=0||R<2)return;
   var c=CI.ctx;
-  /* Bögen öffnen nach oben: von ~210° bis ~330° durch 270° (oben) */
-  var a0=Math.PI+Math.PI*0.168, a1=2*Math.PI-Math.PI*0.168;
-  var arcs=[
-    {r:maxR,      sw:maxR*0.135},
-    {r:maxR*0.62, sw:maxR*0.108},
-    {r:maxR*0.34, sw:maxR*0.085},
-  ];
-  c.save();
-  c.globalAlpha=alpha;
+  var a0=Math.PI+Math.PI*0.168,a1=2*Math.PI-Math.PI*0.168;
+  var arcs=[{r:R,sw:R*0.14},{r:R*0.62,sw:R*0.11},{r:R*0.34,sw:R*0.088}];
+  c.save();c.globalAlpha=alpha;
   arcs.forEach(function(ar){
-    /* Glow-Schicht */
-    c.save();
-    c.shadowColor=col; c.shadowBlur=glow*ar.r*0.18;
-    c.beginPath(); c.arc(cx,cy,ar.r,a0,a1);
-    c.strokeStyle=col; c.lineWidth=ar.sw*0.5; c.lineCap='round'; c.stroke();
+    c.save();c.shadowColor=col;c.shadowBlur=glow*ar.r*0.18;
+    c.beginPath();c.arc(cx,cy,ar.r,a0,a1);
+    c.strokeStyle=col;c.lineWidth=ar.sw*0.52;c.lineCap='round';c.stroke();
     c.restore();
-    /* Hauptlinie */
-    c.beginPath(); c.arc(cx,cy,ar.r,a0,a1);
-    c.strokeStyle=col; c.lineWidth=ar.sw; c.lineCap='round'; c.stroke();
-    /* Glanzstreifen */
+    c.beginPath();c.arc(cx,cy,ar.r,a0,a1);
+    c.strokeStyle=col;c.lineWidth=ar.sw;c.lineCap='round';c.stroke();
     c.save();
     var sg=c.createLinearGradient(cx-ar.r,cy,cx+ar.r,cy);
-    sg.addColorStop(0,'rgba(255,255,255,0)');
-    sg.addColorStop(0.42,'rgba(255,255,255,0.28)');
-    sg.addColorStop(0.58,'rgba(255,255,255,0.10)');
-    sg.addColorStop(1,'rgba(255,255,255,0)');
-    c.beginPath(); c.arc(cx,cy,ar.r,a0,a1);
-    c.strokeStyle=sg; c.lineWidth=ar.sw*0.32; c.lineCap='round'; c.stroke();
+    sg.addColorStop(0,'rgba(255,255,255,0)');sg.addColorStop(0.44,'rgba(255,255,255,0.32)');
+    sg.addColorStop(0.56,'rgba(255,255,255,0.12)');sg.addColorStop(1,'rgba(255,255,255,0)');
+    c.beginPath();c.arc(cx,cy,ar.r,a0,a1);
+    c.strokeStyle=sg;c.lineWidth=ar.sw*0.3;c.lineCap='round';c.stroke();
     c.restore();
   });
-  /* Punkt */
-  var dy=cy+maxR*0.62, dr=maxR*0.112;
-  c.save();
-  c.shadowColor=col; c.shadowBlur=glow*dr*1.8;
-  c.beginPath(); c.arc(cx,dy,dr,0,Math.PI*2);
-  c.fillStyle=col; c.fill();
-  c.restore();
-  /* Glanzfleck auf Punkt */
+  var dy=cy+R*0.62,dr=R*0.115;
+  c.save();c.shadowColor=col;c.shadowBlur=glow*dr*2;
+  c.beginPath();c.arc(cx,dy,dr,0,Math.PI*2);c.fillStyle=col;c.fill();c.restore();
   c.beginPath();
-  c.ellipse(cx-dr*0.3,dy-dr*0.28,dr*0.4,dr*0.26,-Math.PI*0.18,0,Math.PI*2);
-  c.fillStyle='rgba(255,255,255,0.32)'; c.fill();
+  c.ellipse(cx-dr*0.3,dy-dr*0.28,dr*0.42,dr*0.27,-0.32,0,Math.PI*2);
+  c.fillStyle='rgba(255,255,255,0.38)';c.fill();
   c.restore();
 }
 
-/* ── Fragmente (bei Iris-Phase generiert) ── */
 var ciFrags=[];
 function ciGenFrags(cx,cy){
   ciFrags=[];
-  var cols=[CI_BLUE,'#66ccff','#00ffcc','#ffffff','#aaddff'];
-  for(var i=0;i<130;i++){
-    var a=Math.random()*Math.PI*2, sp=0.9+Math.random()*4.5;
-    ciFrags.push({
-      x:cx, y:cy,
-      vx:Math.cos(a)*sp,
-      vy:Math.sin(a)*sp-(0.4+Math.random()*2.4),
-      life:1,
-      decay:0.005+Math.random()*0.011,
-      size:1.2+Math.random()*4.6,
-      col:cols[Math.floor(Math.random()*cols.length)],
-    });
+  var cols=['#00aaff','#66ccff','#00eeff','#ffffff','#00ffcc'];
+  for(var i=0;i<140;i++){
+    var a=Math.random()*Math.PI*2,sp=1+Math.random()*4.8;
+    ciFrags.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(0.5+Math.random()*2.5),
+      life:1,decay:0.005+Math.random()*0.01,size:1.2+Math.random()*4.8,
+      col:cols[Math.floor(Math.random()*cols.length)]});
   }
 }
 
-/* ── Haupt-Loop ── */
 function ciLoop(now){
-  if(CI.skipped) return;
+  if(CI.skipped)return;
   CI.raf=requestAnimationFrame(ciLoop);
+  var c=CI.ctx,W=CI.W,H=CI.H;
+  var t=now-CI.start;          /* elapsed ms — einfach! */
+  var cx=W*0.5,cy=H*0.44;
+  var R=Math.min(W,H)*0.36;
+  var fs=Math.round(Math.min(W,H)*0.062);
 
-  var c=CI.ctx;
-  var W=CI.W, H=CI.H;
-  var elapsed=now-CI.start;
-  /* WiFi-Mittelpunkt: leicht oberhalb der Bildschirmmitte */
-  var cx=W*0.5, cy=H*0.44;
-  var maxR=Math.min(W,H)*0.38;
-  var fsize=Math.round(Math.min(W,H)*0.062);
-
-  /* Hintergrund */
+  /* Immer: schwarzer Hintergrund */
   c.clearRect(0,0,W,H);
-  c.fillStyle='#000'; c.fillRect(0,0,W,H);
+  c.fillStyle='#000';c.fillRect(0,0,W,H);
 
-  /* Sanftes Atemleuchten hinter dem Symbol (ab wifishow) */
-  if(elapsed>=CIP.wifishow){
-    var breathT=elapsed-CIP.wifishow;
-    var breathA=0.04+Math.abs(Math.sin(breathT*0.0028))*0.08;
-    var bg=c.createRadialGradient(cx,cy,0,cx,cy,maxR*1.6);
-    bg.addColorStop(0,CI_BLUE_GLOW+(breathA*1.2)+')');
-    bg.addColorStop(0.5,CI_BLUE_GLOW+(breathA*0.5)+')');
-    bg.addColorStop(1,CI_BLUE_GLOW+'0)');
-    c.beginPath(); c.arc(cx,cy,maxR*1.6,0,Math.PI*2);
-    c.fillStyle=bg; c.fill();
+  /* ── Hintergrund-Glow (ab T1) ── */
+  if(t>=CT.T1){
+    var gA=(0.055+Math.sin(t*0.0025)*0.03)*Math.min(1,(t-CT.T1)/500);
+    if(t>=CT.T8) gA*=Math.max(0,1-(t-CT.T8)/(CT.T9-CT.T8)*2.2);
+    if(gA>0.002){
+      var bg=c.createRadialGradient(cx,cy,0,cx,cy,R*2.4);
+      bg.addColorStop(0,'rgba(0,150,255,'+gA+')');
+      bg.addColorStop(0.55,'rgba(0,90,200,'+(gA*0.38)+')');
+      bg.addColorStop(1,'rgba(0,40,140,0)');
+      c.beginPath();c.arc(cx,cy,R*2.4,0,Math.PI*2);c.fillStyle=bg;c.fill();
+    }
   }
 
-  /* ── 1. BLACKOUT ── rein schwarz, nichts */
+  /* ── WiFi-Symbol ── */
+  if(t>=CT.T1){
+    var wA=1,wS=1,wG=2+Math.sin(t*0.003)*0.8;
 
-  /* ── 2. WIFISHOW: WiFi wächst herein ── */
-  if(elapsed>=CIP.wifishow && elapsed<CIP.presents){
-    var pt=(elapsed-CIP.wifishow)/CIT.wifishow;
-    var s=ciElastic(Math.min(pt,1));
-    var breathGlow=1.0+Math.sin(elapsed*0.005)*0.4;
-    ciWifi(cx,cy,maxR*s,CI_BLUE,Math.min(s*1.6,1),breathGlow);
+    if(t<CT.T2){
+      /* Wächst herein */
+      var p=(t-CT.T1)/(CT.T2-CT.T1);
+      var s=ciElastic(Math.min(p,1));
+      wA=Math.min(s*1.7,1);wS=s;wG=s*2.5;
+    } else if(t>=CT.T3&&t<CT.T4){
+      /* Puls 1 — heller Blitz */
+      var p=(t-CT.T3)/(CT.T4-CT.T3);
+      wG=2.5+Math.sin(p*Math.PI)*5;
+      wS=1+Math.sin(p*Math.PI)*0.04;
+    } else if(t>=CT.T5&&t<CT.T6){
+      /* Puls 2 */
+      var p=(t-CT.T5)/(CT.T6-CT.T5);
+      wG=2.5+Math.sin(p*Math.PI)*6;
+      wS=1+Math.sin(p*Math.PI)*0.04;
+    } else if(t>=CT.T8){
+      /* Iris: verblasst */
+      wA=Math.max(0,1-(t-CT.T8)/(CT.T9-CT.T8)*2.8);
+      wS=1+Math.sin(t*0.003)*0.02;
+    } else {
+      /* Atemeffekt */
+      wS=1+Math.sin(t*0.003)*0.022;
+    }
+
+    if(wA>0.01) ciWifi(cx,cy,R*wS,'#00aaff',wA,wG);
   }
 
-  /* ── 3. PRESENTS: "Cobra Dynamics presents" erscheint ── */
-  if(elapsed>=CIP.presents){
-    /* WiFi hält (mit Atem-Puls) */
-    var breathScale=1+Math.sin((elapsed-CIP.presents)*0.004)*0.018;
-    var breathGlow2=1.2+Math.sin((elapsed-CIP.presents)*0.004)*0.6;
-    /* Nur zeichnen wenn wir NICHT in Pulse-Phasen sind */
-    var inPulse=(elapsed>=CIP.pulse1&&elapsed<CIP.pgap)||(elapsed>=CIP.pulse2&&elapsed<CIP.tgap);
-    if(!inPulse){
-      /* In Titeldrop + hold + iris: ggf. verblassen */
-      var wifiA=1;
-      if(elapsed>=CIP.iris){
-        var ipt=Math.min((elapsed-CIP.iris)/CIT.iris,1);
-        wifiA=Math.max(0,1-ipt*2.8);
-      }
-      ciWifi(cx,cy,maxR*breathScale,CI_BLUE,wifiA,breathGlow2);
-    }
-
-    /* "Cobra Dynamics presents" Text */
-    var presA=Math.min((elapsed-CIP.presents)/CIT.presents*2,1);
-    /* Ausblenden ab titledrop */
-    if(elapsed>=CIP.titledrop){
-      var fadeOut=(elapsed-CIP.titledrop)/CIT.titledrop;
-      presA=Math.max(0,presA-fadeOut*2);
-    }
-    if(presA>0){
+  /* ── "COBRA DYNAMICS PRESENTS" ── */
+  if(t>=CT.T2&&t<CT.T7){
+    var pA;
+    if(t<CT.T3)      pA=Math.min((t-CT.T2)/(CT.T3-CT.T2)*2,1);
+    else if(t<CT.T6) pA=1;
+    else             pA=Math.max(0,1-(t-CT.T6)/(CT.T7-CT.T6)*2.2);
+    if(pA>0.01){
       c.save();
-      c.globalAlpha=presA*0.72;
-      c.fillStyle=CI_BLUE_LT;
-      c.font='400 '+Math.round(fsize*0.38)+'px Share Tech Mono,monospace';
-      c.textAlign='center'; c.textBaseline='middle';
-      c.letterSpacing='0.3em';
-      /* Tipp: letterSpacing nicht in allen Browsern via ctx.font,
-         daher Umweg über shadowBlur für weichen Look */
-      c.shadowColor=CI_BLUE; c.shadowBlur=8*presA;
-      c.fillText('COBRA DYNAMICS PRESENTS', cx, cy+maxR*0.92);
+      c.globalAlpha=pA*0.82;
+      c.fillStyle='#66ccff';
+      c.shadowColor='#00aaff';c.shadowBlur=14;
+      c.font='400 '+Math.round(fs*0.37)+'px Share Tech Mono,monospace';
+      c.textAlign='center';c.textBaseline='middle';
+      c.fillText('COBRA DYNAMICS PRESENTS',cx,cy+R*0.96);
       c.restore();
     }
   }
 
-  /* ── 4. BREATHE: sanftes Pulsieren (keine extra Zeichnung nötig,
-         Atemeffekt läuft via breathGlow in presents-Block oben) ── */
-
-  /* ── 5. PULSE 1: großer blauer Puls-Ring ── */
-  if(elapsed>=CIP.pulse1 && elapsed<CIP.pgap){
-    if(!CI.bassPlayed){ ciBass(); CI.bassPlayed=true; }
-    var pt=(elapsed-CIP.pulse1)/CIT.pulse1;
-    var ft=Math.sin(pt*Math.PI);
-    /* WiFi blitzt heller auf */
-    var flashCol='rgb('+Math.round(lerp(0,180,ft))+','+
-                        Math.round(lerp(170,230,ft))+','+
-                        Math.round(lerp(255,255,ft))+')';
-    ciWifi(cx,cy,maxR,flashCol,1,1+ft*3.5);
-    /* Puls-Ring 1 */
-    var r1=maxR*(1+pt*1.0), a1r=(1-pt)*0.75;
-    c.beginPath(); c.arc(cx,cy,r1,0,Math.PI*2);
-    c.strokeStyle=CI_BLUE_GLOW+a1r+')'; c.lineWidth=6*(1-pt*0.7); c.stroke();
-    /* Puls-Ring 2 (versetzt) */
-    var r2=maxR*(1+pt*1.55), a2r=(1-pt)*0.38;
-    c.beginPath(); c.arc(cx,cy,r2,0,Math.PI*2);
-    c.strokeStyle=CI_BLUE_GLOW+a2r+')'; c.lineWidth=3*(1-pt); c.stroke();
-    /* Screen-Flash */
-    c.fillStyle=CI_BLUE_GLOW+(ft*0.09)+')'; c.fillRect(0,0,W,H);
+  /* ── Puls-Ringe 1 ── */
+  if(t>=CT.T3&&t<CT.T4){
+    if(!CI.bassPlayed){ciBass();CI.bassPlayed=true;}
+    var p=(t-CT.T3)/(CT.T4-CT.T3);
+    var ft=Math.sin(p*Math.PI);
+    c.beginPath();c.arc(cx,cy,R*(1+p*1.1),0,Math.PI*2);
+    c.strokeStyle='rgba(0,180,255,'+(1-p)*0.85+')';c.lineWidth=7*(1-p*0.65);c.stroke();
+    c.beginPath();c.arc(cx,cy,R*(1+p*2.0),0,Math.PI*2);
+    c.strokeStyle='rgba(0,180,255,'+(1-p)*0.42+')';c.lineWidth=3*(1-p);c.stroke();
+    c.fillStyle='rgba(0,120,255,'+(ft*0.09)+')';c.fillRect(0,0,W,H);
   }
 
-  /* ── 6. PGAP: kurze Pause (WiFi-Zeichnung läuft via presents-Block) ── */
-
-  /* ── 7. PULSE 2: zweiter Puls ── */
-  if(elapsed>=CIP.pulse2 && elapsed<CIP.tgap){
-    if(!CI.sonarPlayed){ ciSonar(); CI.sonarPlayed=true; }
-    var pt=(elapsed-CIP.pulse2)/CIT.pulse2;
-    var ft=Math.sin(pt*Math.PI);
-    var flashCol2='rgb('+Math.round(lerp(0,100,ft))+','+
-                         Math.round(lerp(170,220,ft))+','+
-                         Math.round(lerp(255,255,ft))+')';
-    ciWifi(cx,cy,maxR,flashCol2,1,1+ft*4.0);
-    /* 3 gestaffelte Sonar-Ringe */
+  /* ── Puls-Ringe 2 ── */
+  if(t>=CT.T5&&t<CT.T6){
+    if(!CI.sonarPlayed){ciSonar();CI.sonarPlayed=true;}
+    var p=(t-CT.T5)/(CT.T6-CT.T5);
+    var ft=Math.sin(p*Math.PI);
     for(var ri=0;ri<3;ri++){
-      var rpt=Math.max(0,pt-ri*0.16);
-      if(rpt<=0) continue;
-      var rri=maxR*(1+rpt*1.1), rai=Math.max(0,(1-rpt)*0.55);
-      c.beginPath(); c.arc(cx,cy,rri,0,Math.PI*2);
-      c.strokeStyle=CI_BLUE_GLOW+rai+')';
-      c.lineWidth=4*Math.max(0,1-rpt*1.4); c.stroke();
+      var rp=Math.max(0,p-ri*0.14);
+      if(rp<=0)continue;
+      c.beginPath();c.arc(cx,cy,R*(1+rp*1.55),0,Math.PI*2);
+      c.strokeStyle='rgba(0,200,255,'+Math.max(0,(1-rp)*0.68)+')';
+      c.lineWidth=5*Math.max(0,1-rp*1.25);c.stroke();
     }
-    c.fillStyle=CI_BLUE_GLOW+(ft*0.07)+')'; c.fillRect(0,0,W,H);
+    c.fillStyle='rgba(0,150,255,'+(ft*0.07)+')';c.fillRect(0,0,W,H);
   }
 
-  /* ── 8. TITLEDROP: "WIPULSCAN · PRO" schiebt von unten herein ── */
-  if(elapsed>=CIP.titledrop && elapsed<CIP.hold){
-    var pt=ciEaseOut3(Math.min((elapsed-CIP.titledrop)/CIT.titledrop,1));
-    /* Titel schiebt von unten: startY = cy+maxR*1.8 → endY = cy-maxR*1.18 */
-    var titleY=lerp(cy+maxR*1.8, cy-maxR*1.18, pt);
-    var tA=Math.min(pt*1.8,1);
-    c.save();
-    /* Goldener Titel */
-    c.shadowColor='#d4af37'; c.shadowBlur=Math.round(22*pt);
-    c.globalAlpha=tA;
-    c.fillStyle='#f5e070';
-    c.font='700 '+fsize+'px Cinzel Decorative,Cinzel,serif';
-    c.textAlign='center'; c.textBaseline='middle';
-    c.fillText('WIPULSCAN · PRO', cx, titleY);
-    c.restore();
-    /* Unterzeile */
-    var subA=Math.max(0,(pt-0.6)*2.5);
-    if(subA>0){
+  /* ── "WIPULSCAN · PRO" Titel-Drop von unten ── */
+  if(t>=CT.T6){
+    var tA;
+    var p=t<CT.T7?ciEaseOut3((t-CT.T6)/(CT.T7-CT.T6)):1;
+    if(t<CT.T8)      tA=Math.min(p*1.7,1);
+    else             tA=Math.max(0,1-(t-CT.T8)/(CT.T9-CT.T8)*3.8);
+
+    var titleY=lerp(cy+R*1.65,cy-R*1.14,p);
+    if(tA>0.01){
       c.save();
-      c.globalAlpha=subA*0.45;
-      c.fillStyle='#aaaaaa';
-      c.font='400 '+Math.round(fsize*0.36)+'px Share Tech Mono,monospace';
-      c.textAlign='center'; c.textBaseline='middle';
-      c.fillText('SPATIAL SIGNAL VISUALIZATION · PRO', cx, titleY+fsize*0.82);
+      c.globalAlpha=tA;
+      c.shadowColor='#d4af37';c.shadowBlur=Math.round(22*Math.min(p,1));
+      c.fillStyle='#f5e070';
+      c.font='700 '+fs+'px "Cinzel Decorative",Cinzel,serif';
+      c.textAlign='center';c.textBaseline='middle';
+      c.fillText('WIPULSCAN \u00b7 PRO',cx,titleY);
+      if(p>0.6){
+        var subA=(p-0.6)/0.4;
+        c.globalAlpha=tA*subA*0.5;c.shadowBlur=0;
+        c.fillStyle='#aaaaaa';
+        c.font='400 '+Math.round(fs*0.36)+'px Share Tech Mono,monospace';
+        c.fillText('SPATIAL SIGNAL VISUALIZATION',cx,titleY+fs*0.84);
+      }
       c.restore();
     }
   }
 
-  /* ── 9. HOLD: alles sichtbar ── */
-  if(elapsed>=CIP.hold && elapsed<CIP.iris){
-    var titleY=cy-maxR*1.18;
-    c.save();
-    c.shadowColor='#d4af37'; c.shadowBlur=18;
-    c.fillStyle='#f5e070';
-    c.font='700 '+fsize+'px Cinzel Decorative,Cinzel,serif';
-    c.textAlign='center'; c.textBaseline='middle';
-    c.fillText('WIPULSCAN · PRO', cx, titleY);
-    c.restore();
-    c.save();
-    c.globalAlpha=0.42; c.fillStyle='#aaaaaa';
-    c.font='400 '+Math.round(fsize*0.36)+'px Share Tech Mono,monospace';
-    c.textAlign='center'; c.textBaseline='middle';
-    c.fillText('SPATIAL SIGNAL VISUALIZATION · PRO', cx, titleY+fsize*0.82);
-    c.restore();
-  }
+  /* ── Iris-Reveal ── */
+  if(t>=CT.T8){
+    var p=Math.min((t-CT.T8)/(CT.T9-CT.T8),1);
+    if(!CI.fragsGenerated){ciGenFrags(cx,cy);CI.fragsGenerated=true;}
 
-  /* ── 10. IRIS-REVEAL ── */
-  if(elapsed>=CIP.iris){
-    var pt=Math.min((elapsed-CIP.iris)/CIT.iris, 1);
-    var eT=ciEaseInOut(pt);
-
-    /* Fragmente beim ersten Frame generieren */
-    if(!CI.fragsGenerated){
-      ciGenFrags(cx,cy);
-      CI.fragsGenerated=true;
-    }
-
-    /* Titel verblasst */
-    var tA3=Math.max(0,1-pt*3.2);
-    if(tA3>0){
-      var titleY=cy-maxR*1.18;
-      c.save(); c.globalAlpha=tA3; c.fillStyle='#f5e070';
-      c.shadowColor='#d4af37'; c.shadowBlur=10;
-      c.font='700 '+fsize+'px Cinzel Decorative,Cinzel,serif';
-      c.textAlign='center'; c.textBaseline='middle';
-      c.fillText('WIPULSCAN · PRO', cx, titleY);
-      c.restore();
-    }
-
-    /* Fragmente */
+    /* Blaue Fragmente */
     ciFrags=ciFrags.filter(function(f){return f.life>0;});
     ciFrags.forEach(function(f){
-      f.x+=f.vx; f.y+=f.vy;
-      f.vy+=0.036; f.vx*=0.989;
-      f.life-=f.decay;
-      if(f.life<=0) return;
-      c.save();
-      c.shadowColor=f.col; c.shadowBlur=5*f.life;
-      c.fillStyle='rgba(0,180,255,'+(f.life*0.48)+')';
-      c.fillRect(f.x-f.size*0.5, f.y-f.size*0.5, f.size, f.size);
-      c.globalAlpha=f.life*0.88;
-      c.fillStyle=f.col;
-      c.fillRect(f.x-f.size*0.36, f.y-f.size*0.36, f.size*0.72, f.size*0.72);
+      f.x+=f.vx;f.y+=f.vy;f.vy+=0.036;f.vx*=0.99;f.life-=f.decay;
+      if(f.life<=0)return;
+      c.save();c.shadowColor=f.col;c.shadowBlur=5*f.life;
+      c.globalAlpha=f.life*0.88;c.fillStyle=f.col;
+      c.fillRect(f.x-f.size*0.5,f.y-f.size*0.5,f.size,f.size);
       c.restore();
     });
 
-    /* Iris-Maske */
-    var irisMax=Math.sqrt(W*W+H*H)*0.64;
-    var irisR=irisMax*ciEaseInOut(Math.min(pt*1.05,1));
-    c.save();
-    c.beginPath();
-    c.rect(0,0,W,H);
+    /* Kreisförmige Iris-Maske */
+    var irisMax=Math.sqrt(W*W+H*H)*0.66;
+    var irisR=irisMax*ciEaseInOut(Math.min(p*1.04,1));
+    c.save();c.beginPath();c.rect(0,0,W,H);
     c.arc(cx,cy,Math.max(0,irisR),0,Math.PI*2,true);
-    c.fillStyle='#000';
-    c.fill('evenodd');
-    c.restore();
+    c.fillStyle='#000';c.fill('evenodd');c.restore();
 
-    if(pt>=1) ciFinish();
+    if(p>=1)ciFinish();
   }
 }
 
 function ciStart(){
   var el=document.getElementById('intro');
   var ic=document.getElementById('intro-canvas');
-  if(!el||!ic){ ciFinish(); return; }
-
+  if(!el||!ic){ciFinish();return;}
   var dpr=window.devicePixelRatio||1;
-  CI.W=window.innerWidth; CI.H=window.innerHeight;
-  ic.width =Math.round(CI.W*dpr); ic.height=Math.round(CI.H*dpr);
-  ic.style.width=CI.W+'px'; ic.style.height=CI.H+'px';
+  CI.W=window.innerWidth;CI.H=window.innerHeight;
+  ic.width=Math.round(CI.W*dpr);ic.height=Math.round(CI.H*dpr);
+  ic.style.width=CI.W+'px';ic.style.height=CI.H+'px';
   CI.ctx=ic.getContext('2d');
-  CI.ctx.setTransform(1,0,0,1,0,0);
-  CI.ctx.scale(dpr,dpr);
-
-  cisBuild();
-  ciFrags=[];
-  ciAudio();
-
-  CI.bassPlayed=false; CI.sonarPlayed=false;
-  CI.skipped=false; CI.running=true;
-  CI.fragsGenerated=false;
+  CI.ctx.setTransform(1,0,0,1,0,0);CI.ctx.scale(dpr,dpr);
+  ciFrags=[];ciAudio();
+  CI.bassPlayed=false;CI.sonarPlayed=false;
+  CI.skipped=false;CI.running=true;CI.fragsGenerated=false;
   CI.start=performance.now();
-
   el.classList.add('active');
   CI.raf=requestAnimationFrame(ciLoop);
 }
 
 function ciFinish(){
-  if(!CI.running) return;
-  CI.running=false; CI.skipped=true;
+  if(!CI.running)return;
+  CI.running=false;CI.skipped=true;
   cancelAnimationFrame(CI.raf);
   var el=document.getElementById('intro');
   if(el){
-    el.style.transition='opacity 0.45s ease';
-    el.style.opacity='0';
-    setTimeout(function(){ el.classList.remove('active'); el.style.opacity=''; }, 460);
+    el.style.transition='opacity 0.45s ease';el.style.opacity='0';
+    setTimeout(function(){el.classList.remove('active');el.style.opacity='';},460);
   }
   window.enterScanner(true);
 }
 
 window.skipIntro=function(){
-  if(!CI.running) return;
-  CI.running=false; CI.skipped=true;
+  if(!CI.running)return;
+  CI.running=false;CI.skipped=true;
   cancelAnimationFrame(CI.raf);
   var el=document.getElementById('intro');
   if(el){
-    el.style.transition='opacity 0.28s ease';
-    el.style.opacity='0';
-    setTimeout(function(){ el.classList.remove('active'); el.style.opacity=''; }, 300);
+    el.style.transition='opacity 0.28s ease';el.style.opacity='0';
+    setTimeout(function(){el.classList.remove('active');el.style.opacity='';},300);
   }
   window.enterScanner(true);
 };
 
-function showSplash(){ ciStart(); }
+function showSplash(){ciStart();}
+
 
 window.enterScanner=async function(autoScan){
   var sp=$('splash');if(sp)sp.style.display='none';

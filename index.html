@@ -1439,17 +1439,38 @@ var CBLUE='#00aaff',CBLUEG='rgba(0,170,255,';
    MUSS bei User-Geste erstellt werden — Browser blockieren
    AudioContext der außerhalb eines Gesture-Callbacks erstellt wird.
    ensureAudio() wird daher in acceptConsent() UND bootStart() aufgerufen. */
+/* ══════════════════════════════════════════════════════
+   AUDIO ENGINE — iOS/Android WebAudio Fix
+   
+   Problem: Browsers require a REAL sound to be played
+   synchronously inside the gesture callback to unlock
+   the AudioContext. Just calling resume() is not enough
+   on iOS Safari and some Android Chrome versions.
+   
+   Fix: Play a 1ms silent buffer immediately in gesture,
+   then all subsequent audio works.
+══════════════════════════════════════════════════════ */
 function ensureAudio(){
   if(CI.ac)return;
   try{
     var A=window.AudioContext||window.webkitAudioContext;
     if(!A)return;
     CI.ac=new A();
-    /* Sofort resumeen solange wir noch im Gesture-Scope sind */
-    if(CI.ac.state==='suspended')CI.ac.resume().catch(function(){});
+  }catch(e){return;}
+  /* iOS unlock: play a 1-frame silent buffer immediately */
+  try{
+    var buf=CI.ac.createBuffer(1,1,22050);
+    var src=CI.ac.createBufferSource();
+    src.buffer=buf;
+    src.connect(CI.ac.destination);
+    src.start(0);
+    /* Also resume in case it's suspended */
+    if(CI.ac.state==='suspended'){
+      CI.ac.resume().catch(function(){});
+    }
   }catch(e){}
 }
-function ciAudio(){ensureAudio();}
+function ciAudio(){/* no-op: ensureAudio already called in gesture */}
 
 /* Synthetischer Hall */
 function ciMakeReverb(){
@@ -1466,44 +1487,44 @@ function ciMakeReverb(){
 }
 
 /* Brass Voice: Sägezahn + Tiefpassfilter = Hornklang */
-function brassVoice(ac,freq,startT,dur,vol,cutoff){
+function brassVoice(ac,n,freq,startT,dur,vol,cutoff){
   var o=ac.createOscillator(),o2=ac.createOscillator();
   var flt=ac.createBiquadFilter(),g=ac.createGain();
   o.type='sawtooth';o.frequency.value=freq;
   o2.type='sawtooth';o2.frequency.value=freq;o2.detune.value=8;
   flt.type='lowpass';flt.Q.value=1.2;
-  var n=ac.currentTime,atk=0.035;
-  flt.frequency.setValueAtTime(freq*2,n+startT);
-  flt.frequency.linearRampToValueAtTime(cutoff||freq*6,n+startT+atk*3);
-  g.gain.setValueAtTime(0,n+startT);
-  g.gain.linearRampToValueAtTime(vol,n+startT+atk);
-  g.gain.setValueAtTime(vol,n+startT+dur*0.55);
-  g.gain.exponentialRampToValueAtTime(0.0001,n+startT+dur);
+  var atk=0.035,t0=n+startT;
+  flt.frequency.setValueAtTime(freq*2,t0);
+  flt.frequency.linearRampToValueAtTime(cutoff||freq*6,t0+atk*3);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol,t0+atk);
+  g.gain.setValueAtTime(vol,t0+dur*0.55);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
   if(dur>0.5){
     var lfo=ac.createOscillator(),lg=ac.createGain();
     lfo.frequency.value=5.8;lg.gain.value=5;
     lfo.connect(lg);lg.connect(o.frequency);
-    lfo.start(n+startT+0.28);lfo.stop(n+startT+dur);
+    lfo.start(t0+0.28);lfo.stop(t0+dur);
   }
   o.connect(flt);o2.connect(flt);flt.connect(g);
-  o.start(n+startT);o.stop(n+startT+dur+0.1);
-  o2.start(n+startT);o2.stop(n+startT+dur+0.1);
+  o.start(t0);o.stop(t0+dur+0.1);
+  o2.start(t0);o2.stop(t0+dur+0.1);
   return g;
 }
 
 /* String Voice: Sinus-Cluster = warme Streicher */
-function stringVoice(ac,freq,startT,dur,vol){
-  var bus=ac.createGain(),n=ac.currentTime;
-  bus.gain.setValueAtTime(0,n+startT);
-  bus.gain.linearRampToValueAtTime(1,n+startT+0.08);
-  bus.gain.setValueAtTime(1,n+startT+dur*0.7);
-  bus.gain.exponentialRampToValueAtTime(0.0001,n+startT+dur);
+function stringVoice(ac,n,freq,startT,dur,vol){
+  var bus=ac.createGain(),t0=n+startT;
+  bus.gain.setValueAtTime(0,t0);
+  bus.gain.linearRampToValueAtTime(1,t0+0.08);
+  bus.gain.setValueAtTime(1,t0+dur*0.7);
+  bus.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
   [-12,-5,0,5,12].forEach(function(det,i){
     var o=ac.createOscillator(),og=ac.createGain();
     o.type='sine';o.frequency.value=freq;o.detune.value=det;
     og.gain.value=vol*(i===2?1:0.4);
     o.connect(og);og.connect(bus);
-    o.start(n+startT);o.stop(n+startT+dur+0.1);
+    o.start(t0);o.stop(t0+dur+0.1);
   });
   return bus;
 }
@@ -1533,8 +1554,8 @@ function ciMidPunch(){
     if(CI.ac.state==='suspended')CI.ac.resume().catch(function(){});
     var ac=CI.ac,n=ac.currentTime;
     var g=ac.createGain();g.gain.value=0.72;g.connect(ac.destination);
-    brassVoice(ac,220,0,0.55,0.6,1800).connect(g);
-    brassVoice(ac,330,0.04,0.48,0.4,2200).connect(g);
+    brassVoice(ac,n,220,0,0.55,0.6,1800).connect(g);
+    brassVoice(ac,n,330,0.04,0.48,0.4,2200).connect(g);
   }catch(e){}
 }
 
@@ -1561,19 +1582,19 @@ function ciMelody(){
     sub.type='sine';sub.frequency.setValueAtTime(55,n);sub.frequency.exponentialRampToValueAtTime(40,n+0.8);
     subg.gain.setValueAtTime(0,n);subg.gain.linearRampToValueAtTime(0.65,n+0.02);subg.gain.exponentialRampToValueAtTime(0.001,n+1.1);
     sub.connect(subg);subg.connect(bus);sub.start(n);sub.stop(n+1.2);
-    brassVoice(ac,110,0,1.3,0.48,900).connect(bus);
-    brassVoice(ac,165,0.05,1.1,0.28,1200).connect(bus);
-    stringVoice(ac,220,0,1.2,0.22).connect(bus);
+    brassVoice(ac,n,110,0,1.3,0.48,900).connect(bus);
+    brassVoice(ac,n,165,0.05,1.1,0.28,1200).connect(bus);
+    stringVoice(ac,n,220,0,1.2,0.22).connect(bus);
     /* 0.35s: A4 */
-    brassVoice(ac,440,0.35,0.55,0.42,3200).connect(bus);
-    stringVoice(ac,440,0.35,0.60,0.18).connect(bus);
+    brassVoice(ac,n,440,0.35,0.55,0.42,3200).connect(bus);
+    stringVoice(ac,n,440,0.35,0.60,0.18).connect(bus);
     /* 0.58s: C#5 */
-    brassVoice(ac,554.37,0.58,0.52,0.40,3600).connect(bus);
+    brassVoice(ac,n,554.37,0.58,0.52,0.40,3600).connect(bus);
     /* 0.82s: E5 */
-    brassVoice(ac,659.25,0.82,0.58,0.42,3800).connect(bus);
-    stringVoice(ac,659.25,0.82,0.65,0.18).connect(bus);
+    brassVoice(ac,n,659.25,0.82,0.58,0.42,3800).connect(bus);
+    stringVoice(ac,n,659.25,0.82,0.65,0.18).connect(bus);
     /* 1.08s: A5 PEAK */
-    brassVoice(ac,880,1.08,3.8,0.52,5000).connect(bus);
+    brassVoice(ac,n,880,1.08,3.8,0.52,5000).connect(bus);
     [-14,-7,0,7,14].forEach(function(det){
       var o=ac.createOscillator(),og=ac.createGain();
       o.type='sine';o.frequency.value=880;o.detune.value=det;
@@ -1584,9 +1605,9 @@ function ciMelody(){
       lfo.connect(lg);lg.connect(o.frequency);lfo.start(n+1.38);lfo.stop(n+5.0);
       o.connect(og);og.connect(bus);o.start(n+1.08);o.stop(n+5.1);
     });
-    brassVoice(ac,1108.7,1.08,3.4,0.22,6000).connect(bus);
-    stringVoice(ac,1108.7,1.10,3.2,0.14).connect(bus);
-    brassVoice(ac,1318.5,1.15,3.0,0.14,6500).connect(bus);
+    brassVoice(ac,n,1108.7,1.08,3.4,0.22,6000).connect(bus);
+    stringVoice(ac,n,1108.7,1.10,3.2,0.14).connect(bus);
+    brassVoice(ac,n,1318.5,1.15,3.0,0.14,6500).connect(bus);
     var sh=ac.createOscillator(),sg=ac.createGain();
     sh.type='sine';sh.frequency.value=1760;
     sg.gain.setValueAtTime(0,n+1.12);sg.gain.linearRampToValueAtTime(0.06,n+1.18);sg.gain.exponentialRampToValueAtTime(0.0001,n+4.0);
@@ -1597,9 +1618,9 @@ function ciMelody(){
     s2g.gain.setValueAtTime(0,n+1.08);s2g.gain.linearRampToValueAtTime(0.45,n+1.10);s2g.gain.exponentialRampToValueAtTime(0.001,n+2.3);
     s2.connect(s2g);s2g.connect(bus);s2.start(n+1.08);s2.stop(n+2.4);
     /* 2.6s: Ausklingen */
-    stringVoice(ac,440,2.6,2.4,0.20).connect(bus);
-    stringVoice(ac,554.37,2.6,2.3,0.16).connect(bus);
-    stringVoice(ac,659.25,2.75,2.1,0.13).connect(bus);
+    stringVoice(ac,n,440,2.6,2.4,0.20).connect(bus);
+    stringVoice(ac,n,554.37,2.6,2.3,0.16).connect(bus);
+    stringVoice(ac,n,659.25,2.75,2.1,0.13).connect(bus);
   }catch(e){}
 }
 

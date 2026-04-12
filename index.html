@@ -28,6 +28,45 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 #ic{position:absolute;top:0;left:0;display:block}
 #skip-btn{position:absolute;bottom:calc(28px + var(--sb));right:22px;
   font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.32em;
+
+/* ═══ TAP GATE (Gesture-Collector für AudioContext) ═══ */
+#tapgate{
+  position:fixed;inset:0;z-index:400;background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+#tapgate.hidden{display:none}
+.tg-logo{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(22px,7vw,42px);font-weight:700;letter-spacing:.14em;
+  background:linear-gradient(135deg,#f5e070,#d4af37 40%,#fffce0 50%,#d4af37 70%,#f5e070);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 24px rgba(212,175,55,.55));
+  text-align:center;margin-bottom:12px;
+  animation:tgPulse 2.8s ease-in-out infinite;
+}
+.tg-sub{
+  font-family:'Share Tech Mono',monospace;font-size:clamp(7px,1.8vw,10px);
+  letter-spacing:.32em;color:rgba(212,175,55,.38);margin-bottom:52px;
+}
+.tg-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(212,175,55,.18);
+  animation:tgRing 3s ease-out infinite;
+}
+.tg-ring:nth-child(2){animation-delay:1s}
+.tg-ring:nth-child(3){animation-delay:2s}
+@keyframes tgRing{
+  0%{width:60px;height:60px;opacity:.6}
+  100%{width:220px;height:220px;opacity:0}
+}
+.tg-tap{
+  font-family:'Share Tech Mono',monospace;font-size:clamp(8px,2vw,11px);
+  letter-spacing:.42em;color:rgba(212,175,55,.5);
+  animation:tgBlink 1.6s ease-in-out infinite;
+}
+@keyframes tgPulse{0%,100%{filter:drop-shadow(0 0 14px rgba(212,175,55,.4))}50%{filter:drop-shadow(0 0 30px rgba(212,175,55,.75))}}
+@keyframes tgBlink{0%,100%{opacity:.35}50%{opacity:.9}}
   color:rgba(255,255,255,.3);background:transparent;border:none;cursor:pointer;
   padding:10px 14px;-webkit-appearance:none}
 
@@ -313,6 +352,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 </style>
 </head>
 <body>
+
+<!-- TAP GATE — erzwingt User-Gesture für AudioContext -->
+<div id="tapgate" onclick="tapGateGo()">
+  <div class="tg-ring"></div><div class="tg-ring"></div><div class="tg-ring"></div>
+  <div class="tg-logo">WIPULSCAN · PRO</div>
+  <div class="tg-sub">Cobra Dynamics · 2026</div>
+  <div class="tg-tap">◈ &nbsp; TIPPEN ZUM STARTEN &nbsp; ◈</div>
+</div>
 
 <!-- INTRO — immer sichtbar, kein display:none-Problem -->
 <div id="intro">
@@ -1908,12 +1955,12 @@ function hidePerm(){
 
 /* ═══ FLOW ═══ */
 window.acceptConsent=function(){
-  ensureAudio(); /* AudioContext JETZT erstellen — wir sind im Gesture-Callback */
+  /* ensureAudio() wurde bereits im Tap Gate aufgerufen */
   localStorage.setItem('wps_consent','1');
   var el=$('consent');
   el.style.transition='opacity .6s,transform .6s';
   el.style.opacity='0';el.style.transform='scale(1.04)';
-  setTimeout(function(){el.style.display='none';bootStart();},640);
+  setTimeout(function(){el.style.display='none';ciStart();},640);
 };
 
 async function enterScanner(autoScan){
@@ -1961,36 +2008,34 @@ if(localStorage.getItem('wps_pro')==='1'){
   setTimeout(function(){var p=$('f-pro');if(p)p.textContent='◈ PRO ✓';},1800);
 }
 
-/* ═══ BOOT — direkt, keine Async-Kette ═══ */
-function bootStart(){
-  /* Berechtigungen JETZT im Hintergrund anfragen (kein Blocker mehr) */
-  if(typeof DeviceOrientationEvent!=='undefined'&&
-     typeof DeviceOrientationEvent.requestPermission==='function'){
-    DeviceOrientationEvent.requestPermission().catch(function(){});
-  }
-  if(typeof DeviceMotionEvent!=='undefined'&&
-     typeof DeviceMotionEvent.requestPermission==='function'){
-    DeviceMotionEvent.requestPermission().then(function(s){
-      if(s==='granted'){S.hasMotion=true;addEventListener('devicemotion',onMotion,{passive:true});}
-    }).catch(function(){});
+/* ══════════════════════════════════════════════════
+   TAP GATE — einziger Einstiegspunkt für AudioContext
+   Browser REQUIRE einen echten User-Tap bevor
+   AudioContext resumed/genutzt werden kann.
+   tapGateGo() ist der EINZIGE Weg in die App.
+══════════════════════════════════════════════════ */
+window.tapGateGo=function(){
+  /* Schritt 1: AudioContext JETZT erstellen (wir sind im Gesture-Callback) */
+  ensureAudio();
+  /* Schritt 2: Gate ausblenden */
+  var gate=$('tapgate');
+  gate.style.transition='opacity .4s ease';
+  gate.style.opacity='0';
+  setTimeout(function(){gate.classList.add('hidden');},420);
+  /* Schritt 3: Wohin? */
+  if(localStorage.getItem('wps_consent')==='1'){
+    /* Returning user → direkt Intro */
+    setTimeout(ciStart,80);
   }else{
-    S.hasMotion=true;addEventListener('devicemotion',onMotion,{passive:true});
+    /* New user → Consent zeigen */
+    $('consent').style.display='flex';
   }
-  ciStart();
-}
+};
 
-if(localStorage.getItem('wps_consent')==='1'){
-  $('consent').style.display='none';
-  /* Warte auf DOMContentLoaded falls nötig, sonst sofort */
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',bootStart,{once:true});
-  }else{
-    /* Kleines Timeout damit der Browser Fonts laden kann */
-    setTimeout(bootStart, 80);
-  }
-}else{
-  $('consent').style.display='flex';
-}
+/* ══════════════════════════════════════════════════
+   BOOT — zeigt immer zuerst den Tap Gate
+══════════════════════════════════════════════════ */
+/* Tap Gate ist per HTML immer sichtbar — kein JS nötig */
 
 })();
 </script>

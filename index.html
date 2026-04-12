@@ -129,13 +129,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
 .s-copy{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:.19em;
   color:rgba(212,175,55,.2);margin-top:16px;text-align:center;line-height:2}
 
-/* ══════════ HEADING-UP RADAR ══════════ */
-#radar-wrap{
-  position:fixed;z-index:24;
-  pointer-events:none;display:none;
-}
-#radar-wrap.on{display:block}
-#radar-canvas{display:block;border-radius:50%;}
+
 
 /* ══════════ CINEMATIC INTRO ══════════ */
 #intro{
@@ -305,7 +299,49 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
   font-size:10px;font-weight:700;letter-spacing:.24em;background:transparent;
   border:1.5px solid rgba(212,175,55,.26);color:rgba(212,175,55,.62);
   cursor:pointer;border-radius:2px;-webkit-appearance:none}
-#cnote{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+/* ══════════ INFO OVERLAY ══════════ */
+#info-overlay{position:fixed;inset:0;z-index:160;
+  background:rgba(0,0,22,.96);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  display:none;flex-direction:column;align-items:center;
+  padding:calc(18px + var(--st)) 18px calc(24px + var(--sb));
+  overflow-y:auto;-webkit-overflow-scrolling:touch;pointer-events:all}
+#info-overlay.on{display:flex}
+.io-head{font-family:'Cinzel Decorative',serif;font-size:clamp(13px,3.8vw,18px);font-weight:700;
+  letter-spacing:.12em;color:var(--gold);text-align:center;margin-bottom:4px;
+  filter:drop-shadow(0 0 10px rgba(212,175,55,.4))}
+.io-sub{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:.28em;
+  color:rgba(255,255,255,.28);text-align:center;margin-bottom:18px}
+.io-div{width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:.3;margin:0 auto 18px}
+.io-grid{width:100%;max-width:480px;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.io-card{background:rgba(212,175,55,.04);border:1px solid rgba(212,175,55,.14);
+  border-radius:3px;padding:12px 14px;position:relative;overflow:hidden}
+.io-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,.22),transparent)}
+.io-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.io-badge{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:.18em;
+  padding:3px 9px;border-radius:2px;white-space:nowrap;flex-shrink:0}
+.io-unit{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:.16em;
+  color:rgba(255,255,255,.3);flex-shrink:0}
+.io-title{font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:.14em;
+  color:var(--gold);flex:1}
+.io-desc{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.09em;
+  line-height:1.75;color:rgba(255,255,255,.45)}
+.io-scale{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.io-sv{font-family:'Share Tech Mono',monospace;font-size:7.5px;letter-spacing:.1em;
+  padding:2px 7px;border-radius:2px;color:rgba(0,0,0,.8);font-weight:700}
+.io-close{width:100%;max-width:480px;padding:13px;font-family:'Cinzel',serif;
+  font-size:clamp(10px,2.8vw,13px);font-weight:700;letter-spacing:.24em;
+  background:transparent;border:1.5px solid rgba(212,175,55,.36);color:rgba(212,175,55,.75);
+  cursor:pointer;border-radius:2px;-webkit-appearance:none;margin-top:4px}
+/* Info-Button im HUD */
+#f-info{position:fixed;z-index:25;background:rgba(0,0,22,.6);border:1px solid rgba(212,175,55,.2);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border-radius:50%;width:32px;height:32px;
+  display:none;align-items:center;justify-content:center;cursor:pointer;pointer-events:all;
+  font-family:'Share Tech Mono',monospace;font-size:14px;color:rgba(212,175,55,.65)}
+#f-info.on{display:flex}
+
   font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.14em;
   color:rgba(255,100,60,.82);z-index:40;text-align:center;
   background:rgba(0,0,14,.86);padding:16px 22px;border-radius:5px;
@@ -417,10 +453,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
   </div>
 </div>
 
-<div id="radar-wrap">
-  <canvas id="radar-canvas"></canvas>
-</div>
-
 <!-- Floating UI -->
 <div id="real-badge">◈ ECHTDATEN</div>
 <div id="status-txt"></div>
@@ -489,14 +521,106 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);
     <div class="st-v">fetch() Performance API · HEAD request · sub-ms precision</div></div>
   <div class="st-card"><div class="st-k">HEATMAP ENGINE</div>
     <div class="st-v">Canvas radial-gradient accumulation · 60fps redraw</div></div>
-  <div class="st-card"><div class="st-k">RADAR MODE</div>
-    <div class="st-v">LAUFRICHTUNG (Heading-Up) · Vorwärtspunkt immer oben<br/>Kompass-Ausrichtung via DeviceOrientation API</div></div>
-  <div class="st-lbl">Version &amp; Build</div>
   <div class="st-card"><div class="st-k">BUILD</div>
-    <div class="st-v">WIPULSCAN PRO · v5.1.0 · Real-Data + Heading-Up Radar · 2026-04-12</div></div>
+    <div class="st-v">WIPULSCAN PRO · v5.2.0 · Real-Data Edition · 2026-04-12</div></div>
   <div class="st-card"><div class="st-k">ENGINE</div>
-    <div class="st-v">60fps RAF · Liquid LERP · Saccadic Filter · Peak Memory<br/>Haptic Geiger · Laufrichtung Radar · Live Heatmap · No Sim Noise</div></div>
+    <div class="st-v">60fps RAF · Liquid LERP · Gyro-Beam · Peak Memory<br/>Haptic Geiger · Live Heatmap · Echte Netzwerkdaten</div></div>
   <button class="st-close" onclick="closeSettings()">← ZURÜCK · BACK</button>
+</div>
+
+<div class="fic" id="f-info" onclick="openInfo()">ⓘ</div>
+
+<!-- INFO OVERLAY -->
+<div id="info-overlay">
+  <div class="io-head">WAS BEDEUTEN DIE MESSWERTE?</div>
+  <div class="io-sub">Echtzeit-Netzwerkanalyse · Cobra Dynamics</div>
+  <div class="io-div"></div>
+  <div class="io-grid">
+
+    <div class="io-card">
+      <div class="io-row">
+        <div class="io-badge" style="background:rgba(0,255,136,.15);color:#00ff88;border:1px solid rgba(0,255,136,.3)">SIGNAL</div>
+        <div class="io-unit">%</div>
+        <div class="io-title">Signalstärke</div>
+      </div>
+      <div class="io-desc">Wie stark das WLAN- oder Mobilfunksignal an deinem aktuellen Standort ist. Wird aus der Netzwerk-API (RTT + Download-Geschwindigkeit) berechnet. <strong style="color:rgba(212,175,55,.7)">Hoher Wert = guter Empfang.</strong></div>
+      <div class="io-scale">
+        <div class="io-sv" style="background:#00ff88">75–100% Ausgezeichnet</div>
+        <div class="io-sv" style="background:#d4af37">55–74% Gut</div>
+        <div class="io-sv" style="background:#f07000">30–54% Mittel</div>
+        <div class="io-sv" style="background:#ff3333;color:#fff">0–29% Schwach</div>
+      </div>
+    </div>
+
+    <div class="io-card">
+      <div class="io-row">
+        <div class="io-badge" style="background:rgba(212,175,55,.12);color:#d4af37;border:1px solid rgba(212,175,55,.3)">dBm</div>
+        <div class="io-unit">Dezibel-Milliwatt</div>
+        <div class="io-title">Signalleistung</div>
+      </div>
+      <div class="io-desc">Physikalische Signalstärke in Dezibel. Je <strong style="color:rgba(212,175,55,.7)">kleiner der negative Wert</strong>, desto besser. −30 dBm ist nahezu perfekt, −95 dBm kaum noch nutzbar.</div>
+      <div class="io-scale">
+        <div class="io-sv" style="background:#00ff88">−30 bis −50 dBm Ideal</div>
+        <div class="io-sv" style="background:#d4af37">−51 bis −65 dBm Gut</div>
+        <div class="io-sv" style="background:#f07000">−66 bis −75 dBm OK</div>
+        <div class="io-sv" style="background:#ff3333;color:#fff">unter −75 dBm Kritisch</div>
+      </div>
+    </div>
+
+    <div class="io-card">
+      <div class="io-row">
+        <div class="io-badge" style="background:rgba(0,200,255,.1);color:#00ccff;border:1px solid rgba(0,200,255,.25)">SNR</div>
+        <div class="io-unit">dB Signal-Rausch-Abstand</div>
+        <div class="io-title">Signalqualität</div>
+      </div>
+      <div class="io-desc">Verhältnis von Nutzsignal zu Hintergrundrauschen. <strong style="color:rgba(212,175,55,.7)">Höher ist besser.</strong> Ein niedriger SNR bedeutet, das Signal wird von anderen Funkquellen oder Störungen überlagert. Wird aus RTT-Stabilität und Downloadrate geschätzt.</div>
+      <div class="io-scale">
+        <div class="io-sv" style="background:#00ff88">über 25 dB Rauschfrei</div>
+        <div class="io-sv" style="background:#d4af37">15–25 dB Akzeptabel</div>
+        <div class="io-sv" style="background:#ff3333;color:#fff">unter 15 dB Gestört</div>
+      </div>
+    </div>
+
+    <div class="io-card">
+      <div class="io-row">
+        <div class="io-badge" style="background:rgba(240,112,0,.12);color:#f07000;border:1px solid rgba(240,112,0,.3)">PING</div>
+        <div class="io-unit">Millisekunden (ms)</div>
+        <div class="io-title">Latenz / Reaktionszeit</div>
+      </div>
+      <div class="io-desc">Zeit, die ein Datenpaket braucht um zum Server und zurück zu kommen. Wird <strong style="color:rgba(212,175,55,.7)">live gemessen</strong> via anonymer HEAD-Anfrage an Googles 204-Server. <strong style="color:rgba(0,255,136,.7)">◈ GEMESSEN</strong> = echter Wert, kein Schätzwert.</div>
+      <div class="io-scale">
+        <div class="io-sv" style="background:#00ff88">unter 30 ms Perfekt (Gaming)</div>
+        <div class="io-sv" style="background:#d4af37">30–80 ms Gut (Video)</div>
+        <div class="io-sv" style="background:#f07000">80–150 ms Mittel</div>
+        <div class="io-sv" style="background:#ff3333;color:#fff">über 150 ms Hoch</div>
+      </div>
+    </div>
+
+    <div class="io-card">
+      <div class="io-row">
+        <div class="io-badge" style="background:rgba(212,175,55,.08);color:rgba(212,175,55,.8);border:1px solid rgba(212,175,55,.2)">QUALITÄT</div>
+        <div class="io-unit">%</div>
+        <div class="io-title">Gesamtbewertung</div>
+      </div>
+      <div class="io-desc">Kombinierter Score aus Signalstärke (82 %) und SNR (38 %). Gibt auf einen Blick an, wie gut die Verbindung <em>insgesamt</em> ist — nicht nur die rohe Stärke.</div>
+    </div>
+
+    <div class="io-card">
+      <div class="io-row">
+        <div class="io-badge" style="background:rgba(0,255,136,.1);color:#00ff88;border:1px solid rgba(0,255,136,.2)">◈ ECHTDATEN</div>
+      </div>
+      <div class="io-desc">Dieses Badge erscheint, wenn <strong style="color:rgba(212,175,55,.7)">echte Werte</strong> aus der Browser-Netzwerk-API vorliegen (navigator.connection). Ohne API-Unterstützung läuft die App im Simulationsmodus — dann keine grüne Markierung.</div>
+    </div>
+
+    <div class="io-card">
+      <div class="io-row">
+        <div class="io-badge" style="background:rgba(212,175,55,.08);color:rgba(212,175,55,.7);border:1px solid rgba(212,175,55,.2)">RICHTUNGSSTRAHL</div>
+      </div>
+      <div class="io-desc">Der animierte Strahl zeigt die <strong style="color:rgba(212,175,55,.7)">aktuelle Scan-Richtung</strong>. Mit Geräteneigung (Gyroskop) folgt er deiner Handbewegung — ohne Gyroskop sweept er automatisch. Die Farbe ändert sich mit der Signalstärke: Rot = schwach, Gold = mittel, Grün = stark.</div>
+    </div>
+
+  </div>
+  <button class="io-close" onclick="closeInfo()">← VERSTANDEN · SCHLIESSEN</button>
 </div>
 
 <div id="cnote">Kamera nicht verfügbar<br/><span style="font-size:9px;opacity:.38;letter-spacing:.1em">Kamerazugriff im Browser erlauben</span></div>
@@ -756,197 +880,11 @@ window.toggleHeatmap=function(){
   }
 };
 
-/* ═══════════════════════════════════════════
-   LAUFRICHTUNG RADAR ENGINE (Heading-Up)
-
-   FIX [2]: Radar zeigt immer die Laufrichtung oben.
-   • "VORN" ist ein statisches Label bei 12 Uhr.
-   • Messpunkte werden immer leicht vorne (nahe am
-     Zentrum, oben) eingetragen – nicht mehr über den
-     Neigungswinkel des Telefons (betaDist war falsch).
-   • Cardinals rotieren gegen den Kompass-Heading,
-     sodass die Himmelsrichtung, in die man schaut,
-     immer oben steht (echtes Heading-Up).
-═══════════════════════════════════════════ */
-var RADAR = {
-  canvas: null, ctx: null,
-  size: 0, dpr: 1,
-  heading: 0, smoothH: 0,
-  points: [],
-  maxDistPx: 0,
-};
-
-function initRadar(){
-  var rc = document.getElementById('radar-canvas');
-  if(!rc) return;
-  RADAR.canvas = rc; RADAR.ctx = rc.getContext('2d');
-  RADAR.dpr = window.devicePixelRatio || 1;
-  RADAR.size = Math.max(90, Math.round(Math.min(CW,CH)*0.22));
-  var px = Math.round(RADAR.size * RADAR.dpr);
-  rc.width = px; rc.height = px;
-  rc.style.width  = RADAR.size+'px'; rc.style.height = RADAR.size+'px';
-  RADAR.maxDistPx = RADAR.size * 0.42;
-}
-
-function radarAddPoint(bearingDeg, distNorm, sig){
-  RADAR.points.push({b:bearingDeg, d:clamp(distNorm,0,1), s:sig, t:Date.now()});
-  if(RADAR.points.length > 80) RADAR.points = RADAR.points.slice(-80);
-}
-
-function drawRadar(){
-  var rc = RADAR.ctx;
-  if(!rc) return;
-  var sz = RADAR.size, r = sz*0.5, dpr = RADAR.dpr;
-  rc.clearRect(0, 0, sz*dpr, sz*dpr);
-  RADAR.smoothH = lpf(RADAR.smoothH, RADAR.heading, 0.08);
-  var headRad = -RADAR.smoothH * Math.PI / 180;
-
-  rc.save(); rc.scale(dpr, dpr);
-
-  /* Clip circle */
-  rc.beginPath(); rc.arc(r,r,r*0.96,0,Math.PI*2); rc.clip();
-  rc.fillStyle='rgba(0,0,18,0.78)'; rc.fill();
-
-  /* Rings */
-  [0.25,0.5,0.75,1.0].forEach(function(fr){
-    rc.beginPath(); rc.arc(r,r,RADAR.maxDistPx*fr,0,Math.PI*2);
-    rc.strokeStyle='rgba(0,255,136,'+(fr===1?0.2:0.08)+')';
-    rc.lineWidth=fr===1?1:0.5; rc.stroke();
-  });
-
-  /* ─ ROTIERENDER KOMPASS-RING (dreht mit Heading = Heading-Up) ─ */
-  rc.save(); rc.translate(r,r); rc.rotate(headRad);
-  /* Cardinal-Buchstaben: N=Rot, Rest dezent */
-  ['N','O','S','W'].forEach(function(d,i){
-    var a = i*Math.PI*0.5 - Math.PI*0.5;
-    var dist = RADAR.maxDistPx*0.82;
-    var tx = Math.cos(a)*dist, ty = Math.sin(a)*dist;
-    rc.fillStyle = d==='N'?'rgba(255,90,90,.65)':'rgba(0,255,136,.2)';
-    rc.font = "400 "+Math.round(sz*0.075)+"px 'Share Tech Mono',monospace";
-    rc.textAlign='center'; rc.textBaseline='middle';
-    rc.fillText(d, tx, ty);
-    /* Tick-Mark */
-    rc.beginPath();
-    rc.moveTo(Math.cos(a)*RADAR.maxDistPx*0.93, Math.sin(a)*RADAR.maxDistPx*0.93);
-    rc.lineTo(Math.cos(a)*RADAR.maxDistPx*1.0,  Math.sin(a)*RADAR.maxDistPx*1.0);
-    rc.strokeStyle = d==='N'?'rgba(255,90,90,.45)':'rgba(0,255,136,.18)';
-    rc.lineWidth=1; rc.stroke();
-  });
-  rc.restore();
-
-  /* ─ MESSPUNKTE (Red Chain) ─ */
-  var now=Date.now();
-  var alive=RADAR.points.filter(function(p){return (now-p.t)<28000;});
-
-  /* Verbindungslinien */
-  if(alive.length>1){
-    rc.save(); rc.translate(r,r); rc.rotate(headRad);
-    rc.beginPath();
-    alive.forEach(function(p,i){
-      var a = p.b*Math.PI/180 - Math.PI*0.5;
-      var px2 = Math.cos(a)*p.d*RADAR.maxDistPx;
-      var py2 = Math.sin(a)*p.d*RADAR.maxDistPx;
-      if(!i) rc.moveTo(px2,py2); else rc.lineTo(px2,py2);
-    });
-    rc.strokeStyle='rgba(255,50,50,0.22)'; rc.lineWidth=0.8; rc.stroke();
-    rc.restore();
-  }
-
-  /* Dots */
-  rc.save(); rc.translate(r,r); rc.rotate(headRad);
-  alive.forEach(function(p){
-    var age=(now-p.t)/28000, fa=Math.max(0,1-age);
-    var a = p.b*Math.PI/180 - Math.PI*0.5;
-    var px2 = Math.cos(a)*p.d*RADAR.maxDistPx;
-    var py2 = Math.sin(a)*p.d*RADAR.maxDistPx;
-    var dotR = Math.max(2, sz*0.028)*(0.7+p.s/100*0.3);
-    var rgb = CLV[sigLvl(p.s)].rgb;
-    rc.shadowColor='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',.9)';
-    rc.shadowBlur=6*fa;
-    /* Signal-farbiger Außenring */
-    rc.beginPath(); rc.arc(px2,py2,dotR*1.3,0,Math.PI*2);
-    rc.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(fa*0.25)+')'; rc.fill();
-    /* Rot-Kern */
-    rc.beginPath(); rc.arc(px2,py2,dotR,0,Math.PI*2);
-    rc.fillStyle='rgba(255,60,60,'+(fa*0.88)+')'; rc.fill();
-    /* Heller Mittelpunkt */
-    rc.beginPath(); rc.arc(px2,py2,dotR*0.4,0,Math.PI*2);
-    rc.fillStyle='rgba(255,200,200,'+(fa*0.9)+')'; rc.fill();
-    rc.shadowBlur=0;
-  });
-  rc.restore();
-
-  /* Center Cross */
-  rc.save(); rc.translate(r,r);
-  var cs=sz*0.032; rc.strokeStyle='rgba(0,255,136,.6)'; rc.lineWidth=1.2;
-  rc.beginPath(); rc.moveTo(-cs,0); rc.lineTo(cs,0); rc.stroke();
-  rc.beginPath(); rc.moveTo(0,-cs); rc.lineTo(0,cs); rc.stroke();
-  /* Mittelpunkt-Dot */
-  rc.beginPath(); rc.arc(0,0,sz*0.018,0,Math.PI*2);
-  rc.fillStyle='rgba(0,255,136,.5)'; rc.fill();
-  rc.restore();
-
-  /* ─ VORWÄRTS-PFEIL (statisch, immer oben = Laufrichtung) ─ */
-  rc.save(); rc.translate(r,r);
-  var al=RADAR.maxDistPx*0.68, ah=sz*0.058;
-  /* Glow-Trail */
-  var trailGrad = rc.createLinearGradient(0,0,0,-al);
-  trailGrad.addColorStop(0,'rgba(212,175,55,0)');
-  trailGrad.addColorStop(0.6,'rgba(212,175,55,0.15)');
-  trailGrad.addColorStop(1,'rgba(212,175,55,0.55)');
-  rc.beginPath(); rc.moveTo(0,0); rc.lineTo(0,-al);
-  rc.strokeStyle=trailGrad; rc.lineWidth=2; rc.lineCap='round'; rc.stroke();
-  /* Pfeilspitze */
-  rc.strokeStyle='rgba(212,175,55,.9)'; rc.lineWidth=1.8; rc.lineCap='round';
-  rc.shadowColor='rgba(212,175,55,.7)'; rc.shadowBlur=7;
-  rc.beginPath();
-  rc.moveTo(-ah*0.55,-al+ah*0.9); rc.lineTo(0,-al); rc.lineTo(ah*0.55,-al+ah*0.9);
-  rc.stroke();
-  rc.shadowBlur=0;
-  rc.restore();
-
-  /* ─ STATISCHE LABELS (VORN / HINTEN) ─ */
-  rc.save(); rc.translate(r,r);
-  /* VORN oben */
-  rc.fillStyle='rgba(212,175,55,.85)';
-  rc.font="700 "+Math.round(sz*0.095)+"px 'Share Tech Mono',monospace";
-  rc.textAlign='center'; rc.textBaseline='middle';
-  rc.shadowColor='rgba(212,175,55,.5)'; rc.shadowBlur=6;
-  rc.fillText('VORN', 0, -(RADAR.maxDistPx*0.66));
-  rc.shadowBlur=0;
-  /* HINTEN unten (optional, dezent) */
-  rc.fillStyle='rgba(255,255,255,.14)';
-  rc.font="400 "+Math.round(sz*0.075)+"px 'Share Tech Mono',monospace";
-  rc.fillText('HINTEN', 0, RADAR.maxDistPx*0.74);
-  rc.restore();
-
-  /* Outer border */
-  rc.beginPath(); rc.arc(r,r,r*0.96,0,Math.PI*2);
-  rc.strokeStyle='rgba(212,175,55,.2)'; rc.lineWidth=1; rc.stroke();
-
-  /* Heading-Anzeige */
-  rc.fillStyle='rgba(212,175,55,.6)';
-  rc.font="600 "+Math.round(sz*0.1)+"px 'Share Tech Mono',monospace";
-  rc.textAlign='center'; rc.textBaseline='middle';
-  rc.fillText(Math.round(RADAR.smoothH)+'°', r, sz*0.91);
-
-  rc.restore();
-}
-
-function positionRadar(){
-  var wrap=document.getElementById('radar-wrap');
-  if(!wrap) return;
-  var sbPx=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sb')||'0')||0;
-  wrap.style.bottom=(sbPx+110)+'px';
-  wrap.style.left='14px';
-}
-
 /* ═══ DIRECTIONAL VECTOR BEAM ═══ */
 var vecAngle=0, vecTarget=0;
 
 function drawDirectionalBeam(now,acy){
   var W=CW;
-  vecAngle=lerp(vecAngle,vecTarget,0.04);
   var v=S.dSig;
   var len=Math.min(W,(CH-acy))*0.36;
   var cx=W*0.5;
@@ -1165,10 +1103,15 @@ function loop(now){
   S.tr=rgb[0];S.tg=rgb[1];S.tb=rgb[2];
   S.cr=lerp(S.cr,S.tr,COL_A);S.cg=lerp(S.cg,S.tg,COL_A);S.cb=lerp(S.cb,S.tb,COL_A);
 
-  /* Pfeil immer nach oben = Laufrichtung (Canvas-Winkel -PI/2 = oben).
-     Leichte Gyro-Korrektur für dynamischen Look. */
-  vecTarget = -Math.PI * 0.5;
-  if(S.hasGyro){ vecTarget += clamp(S.smoothGamma * 0.005, -0.2, 0.2); }
+  /* Beam-Winkel:
+     Mit Gyro: folgt Gamma (Kippen links/rechts) relativ zur Vertikalen.
+     Ohne Gyro: Sweep-Animation links↔rechts, sichtbar dynamisch. */
+  if(S.hasGyro){
+    vecTarget = -Math.PI*0.5 + clamp(S.smoothGamma * 0.028, -Math.PI*0.42, Math.PI*0.42);
+  } else {
+    vecTarget = -Math.PI*0.5 + Math.sin(now * 0.0018) * Math.PI * 0.38;
+  }
+  vecAngle = lerp(vecAngle, vecTarget, 0.07);
 
   if(S.heatmapOn) renderHeatmap();
 
@@ -1176,7 +1119,7 @@ function loop(now){
   var fh=frostH();
   var camCy=fh+(CH-fh)*0.46;
   drawTrail(now);
-  if(S.scanning){drawDirectionalBeam(now,camCy);drawGhostPeakArrow(camCy);drawRadar();}
+  if(S.scanning){drawDirectionalBeam(now,camCy);drawGhostPeakArrow(camCy);}
   if(S.scanning) paintDOM();
 }
 
@@ -1243,16 +1186,6 @@ function measure(){
 
     hmAddPoint(pos.x,pos.y,S.tSig);
 
-    /* FIX [2b]: Immer leicht vorne eintragen (Laufrichtung).
-       bearing = aktuelle Kompassrichtung (wohin man schaut),
-       fwdDist = kleiner Abstand nahe am Zentrum / oben.
-       Durch die Heading-Up-Rotation des Radars erscheint
-       dieser Punkt immer leicht vorne (12-Uhr-Richtung). */
-    var bearing = RADAR.heading;
-    /* Dots über den ganzen Radar verteilen: 25–80% Radius */
-    var fwdDist = 0.25 + Math.random()*0.55;
-    radarAddPoint(bearing, fwdDist, S.tSig);
-
     if(S.proUnlocked){
       for(var i=0;i<7;i++){
         var a=Math.random()*Math.PI*2,sp=0.4+Math.random()*1.1;
@@ -1266,18 +1199,19 @@ function measure(){
 /* ═══ HAPTIC GEIGER ═══ */
 function scheduleHaptic(){
   if(S.hapticIv)clearInterval(S.hapticIv);
-  var interval=Math.round(HAPTIC_BASE-(HAPTIC_BASE-80)*(S.dSig/100));
-  S.hapticIv=setInterval(function(){
+  function hapticTick(){
     if(!S.scanning||!navigator.vibrate)return;
     var v=S.dSig;
-    var iv=Math.round(HAPTIC_BASE-(HAPTIC_BASE-80)*(v/100));
     if(v>=85){navigator.vibrate([8,40,8]);}
     else if(v>=55){navigator.vibrate(10);}
     else if(v>=30){navigator.vibrate(8);}
     else{navigator.vibrate(6);}
     clearInterval(S.hapticIv);
-    S.hapticIv=setInterval(arguments.callee,iv);
-  },interval);
+    var iv=Math.round(HAPTIC_BASE-(HAPTIC_BASE-80)*(v/100));
+    S.hapticIv=setInterval(hapticTick,iv);
+  }
+  var iv0=Math.round(HAPTIC_BASE-(HAPTIC_BASE-80)*(S.dSig/100));
+  S.hapticIv=setInterval(hapticTick,iv0);
 }
 
 /* ═══ GYRO / COMPASS ═══ */
@@ -1286,13 +1220,6 @@ addEventListener('deviceorientation',function(e){
   S.smoothGamma=lpf(S.smoothGamma,e.gamma||0,LP_GYRO);
   S.smoothBeta =lpf(S.smoothBeta, e.beta||90, LP_GYRO);
   S.orient.alpha=e.alpha||0;S.orient.beta=e.beta||0;S.orient.gamma=e.gamma||0;
-
-  /* Kompass-Heading: iOS liefert webkitCompassHeading (True North),
-     Android liefert alpha (magnetisch) */
-  var heading = e.webkitCompassHeading != null
-    ? e.webkitCompassHeading
-    : (e.alpha || 0);
-  RADAR.heading = heading;
 
   if(!S.scanning)return;
   var dg=Math.abs((e.gamma||0)-S.orient.gamma);
@@ -1307,7 +1234,6 @@ function startScan(){
   S.dots=[];S.parts=[];S.lastDot={x:-9999,y:-9999};
   S.sSig=S.base;S.sPing=S.basePing;S.tSig=S.base;S.dSig=S.base;
   S.peak=0;S.peakSet=false;S.hmPoints=[];S.hmDirty=true;
-  RADAR.points=[];
   $('f-peak').classList.remove('on');
 
   readNetworkAPI();
@@ -1318,7 +1244,6 @@ function startScan(){
   $('f-status').textContent=NET.hasRealData?'LIVE-DATEN':'SCANNING';
   $('legbox').classList.add('on');$('status-txt').classList.add('on');
   $('hm-toggle').classList.add('on');
-  document.getElementById('radar-wrap').classList.add('on');
 
   measure();
   S.scanIv=setInterval(measure,SCAN_MS);
@@ -1333,7 +1258,6 @@ function stopScan(){
   if(S.hapticIv)clearInterval(S.hapticIv);
   $('btn').textContent='⬡  Scan Starten  ⬡';$('btn').classList.remove('scanning');
   $('f-status').textContent='PAUSIERT';
-  document.getElementById('radar-wrap').classList.remove('on');
 }
 
 /* ═══ CAMERA ═══ */
@@ -1365,8 +1289,7 @@ function positionUI(){
   $('f-peak').style.top=(fh+12)+'px';$('f-peak').style.right='12px';
   $('legbox').style.top=(fh+56)+'px';$('legbox').style.right='12px';
   $('real-badge').style.top=(fh+12)+'px';$('real-badge').style.left='12px';
-  initRadar();
-  positionRadar();
+  $('f-info').style.bottom=(sbPx+130)+'px';$('f-info').style.right='14px';
 }
 
 /* ═══ CONSENT → INTRO → SCANNER FLOW ═══ */
@@ -1642,17 +1565,23 @@ function ciStart(){
   var el=document.getElementById('intro');
   var ic=document.getElementById('intro-canvas');
   if(!el||!ic){ciFinish();return;}
+  /* Direkt sichtbar machen — kein CSS-Klassen-Switching */
+  el.style.position='fixed';el.style.inset='0';el.style.zIndex='300';
+  el.style.background='#000';el.style.display='flex';
+  el.style.alignItems='center';el.style.justifyContent='center';
+  el.style.overflow='hidden';
   var dpr=window.devicePixelRatio||1;
   CI.W=window.innerWidth;CI.H=window.innerHeight;
   ic.width=Math.round(CI.W*dpr);ic.height=Math.round(CI.H*dpr);
-  ic.style.width=CI.W+'px';ic.style.height=CI.H+'px';
+  ic.style.cssText='position:absolute;top:0;left:0;width:'+CI.W+'px;height:'+CI.H+'px;';
   CI.ctx=ic.getContext('2d');
   CI.ctx.setTransform(1,0,0,1,0,0);CI.ctx.scale(dpr,dpr);
+  /* Sofort schwarz füllen — verhindert weißen Flash */
+  CI.ctx.fillStyle='#000';CI.ctx.fillRect(0,0,CI.W,CI.H);
   ciFrags=[];ciAudio();
   CI.bassPlayed=false;CI.sonarPlayed=false;
   CI.skipped=false;CI.running=true;CI.fragsGenerated=false;
   CI.start=performance.now();
-  el.classList.add('active');
   CI.raf=requestAnimationFrame(ciLoop);
 }
 
@@ -1686,7 +1615,7 @@ function showSplash(){ciStart();}
 window.enterScanner=async function(autoScan){
   var sp=$('splash');if(sp)sp.style.display='none';
   $('hud').classList.add('on');$('btn').classList.add('on');
-  $('f-set').classList.add('on');$('f-pro').classList.add('on');
+  $('f-set').classList.add('on');$('f-pro').classList.add('on');$('f-info').classList.add('on');
   positionUI();
   await startCamera();
   requestAnimationFrame(loop);
@@ -1694,6 +1623,8 @@ window.enterScanner=async function(autoScan){
 };
 
 window.toggleScan=toggleScan;
+window.openInfo=function(){$('info-overlay').classList.add('on');};
+window.closeInfo=function(){$('info-overlay').classList.remove('on');};
 window.openPro=function(){$('prom').classList.add('on');};
 window.closePro=function(){$('prom').classList.remove('on');};
 window.buyPro=function(){
@@ -1707,7 +1638,6 @@ window.closeSettings=function(){$('settings').classList.remove('on');};
 window.deleteData=function(){
   localStorage.clear();S.dots=[];S.parts=[];S.proUnlocked=false;
   S.peak=0;S.peakSet=false;S.hmPoints=[];S.hmDirty=true;
-  RADAR.points=[];
   hmCtx.clearRect(0,0,hmCanvas.width,hmCanvas.height);
   alert('Alle lokalen Daten gelöscht. (DSGVO Art. 17)');
   window.closeSettings();window.closePro();

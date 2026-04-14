@@ -3,16 +3,19 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<meta name="theme-color" content="#000000"/>
+<meta name="theme-color" content="#4499ff"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="WIPULSCAN"/>
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22WIPULSCAN%20PRO%22%2C%22short_name%22%3A%22WIPULSCAN%22%2C%22description%22%3A%22Signal%20Scanner%20by%20Cobra%20Dynamics%22%2C%22start_url%22%3A%22./%22%2C%22display%22%3A%22fullscreen%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%23000010%22%2C%22theme_color%22%3A%22%231a7fff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmciIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI%2BCiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwYTBhMmUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAwMDEwIi8%2BCiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJ3MSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNjBjOGZmIi8%2BCiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjMWE3ZmZmIi8%2BCiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwNDBjYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idzIiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzgwZDhmZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzIwOTBmZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDUwZGQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ%2BCiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InczIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI%2BCiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNhMGU4ZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiM0MGE4ZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDA2MGVlIi8%2BCiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGZpbHRlciBpZD0iZ2xvdyI%2BCiAgICAgIDxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjgiIHJlc3VsdD0iYmx1ciIvPgogICAgICA8ZmVNZXJnZT48ZmVNZXJnZU5vZGUgaW49ImJsdXIiLz48ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiLz48L2ZlTWVyZ2U%2BCiAgICA8L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9Imdsb3cyIj4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iNCIgcmVzdWx0PSJibHVyIi8%2BCiAgICAgIDxmZU1lcmdlPjxmZU1lcmdlTm9kZSBpbj0iYmx1ciIvPjxmZU1lcmdlTm9kZSBpbj0iU291cmNlR3JhcGhpYyIvPjwvZmVNZXJnZT4KICAgIDwvZmlsdGVyPgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0idXJsKCNiZykiLz4KICA8IS0tIE91dGVyIGFyYyAtLT4KICA8cGF0aCBkPSJNIDk2IDI5MCBBIDIwMCAyMDAgMCAwIDEgNDE2IDI5MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3cxKSIgc3Ryb2tlLXdpZHRoPSI0OCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWx0ZXI9InVybCgjZ2xvdykiLz4KICA8IS0tIE1pZGRsZSBhcmMgLS0%2BCiAgPHBhdGggZD0iTSAxNDggMzEwIEEgMTQwIDE0MCAwIDAgMSAzNjQgMzEwIiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjdzIpIiBzdHJva2Utd2lkdGg9IjQyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbHRlcj0idXJsKCNnbG93KSIvPgogIDwhLS0gSW5uZXIgYXJjIC0tPgogIDxwYXRoIGQ9Ik0gMjAwIDMzMiBBIDgwIDgwIDAgMCAxIDMxMiAzMzIiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCN3MykiIHN0cm9rZS13aWR0aD0iMzYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8%2BCiAgPCEtLSBEb3QgLS0%2BCiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMzkwIiByPSIyOCIgZmlsbD0iIzYwYzhmZiIgZmlsdGVyPSJ1cmwoI2dsb3cyKSIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjM5MCIgcj0iMTgiIGZpbGw9IiNhMGU4ZmYiLz4KICA8IS0tIFRvcCBzaGluZSBvbiBvdXRlciBhcmMgLS0%2BCiAgPHBhdGggZD0iTSAxMTIgMjgyIEEgMTk2IDE5NiAwIDAgMSAyNTYgMTgwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjI1KSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8%2BCjwvc3ZnPg%3D%3D%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image/svg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%2C%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmciIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI%2BCiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwYTBhMmUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAwMDEwIi8%2BCiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJ3MSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNjBjOGZmIi8%2BCiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjMWE3ZmZmIi8%2BCiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwNDBjYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idzIiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzgwZDhmZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzIwOTBmZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDUwZGQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ%2BCiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InczIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI%2BCiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNhMGU4ZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiM0MGE4ZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDA2MGVlIi8%2BCiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGZpbHRlciBpZD0iZ2xvdyI%2BCiAgICAgIDxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjgiIHJlc3VsdD0iYmx1ciIvPgogICAgICA8ZmVNZXJnZT48ZmVNZXJnZU5vZGUgaW49ImJsdXIiLz48ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiLz48L2ZlTWVyZ2U%2BCiAgICA8L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9Imdsb3cyIj4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iNCIgcmVzdWx0PSJibHVyIi8%2BCiAgICAgIDxmZU1lcmdlPjxmZU1lcmdlTm9kZSBpbj0iYmx1ciIvPjxmZU1lcmdlTm9kZSBpbj0iU291cmNlR3JhcGhpYyIvPjwvZmVNZXJnZT4KICAgIDwvZmlsdGVyPgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0idXJsKCNiZykiLz4KICA8IS0tIE91dGVyIGFyYyAtLT4KICA8cGF0aCBkPSJNIDk2IDI5MCBBIDIwMCAyMDAgMCAwIDEgNDE2IDI5MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3cxKSIgc3Ryb2tlLXdpZHRoPSI0OCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWx0ZXI9InVybCgjZ2xvdykiLz4KICA8IS0tIE1pZGRsZSBhcmMgLS0%2BCiAgPHBhdGggZD0iTSAxNDggMzEwIEEgMTQwIDE0MCAwIDAgMSAzNjQgMzEwIiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjdzIpIiBzdHJva2Utd2lkdGg9IjQyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbHRlcj0idXJsKCNnbG93KSIvPgogIDwhLS0gSW5uZXIgYXJjIC0tPgogIDxwYXRoIGQ9Ik0gMjAwIDMzMiBBIDgwIDgwIDAgMCAxIDMxMiAzMzIiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCN3MykiIHN0cm9rZS13aWR0aD0iMzYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8%2BCiAgPCEtLSBEb3QgLS0%2BCiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMzkwIiByPSIyOCIgZmlsbD0iIzYwYzhmZiIgZmlsdGVyPSJ1cmwoI2dsb3cyKSIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjM5MCIgcj0iMTgiIGZpbGw9IiNhMGU4ZmYiLz4KICA8IS0tIFRvcCBzaGluZSBvbiBvdXRlciBhcmMgLS0%2BCiAgPHBhdGggZD0iTSAxMTIgMjgyIEEgMTk2IDE5NiAwIDAgMSAyNTYgMTgwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjI1KSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8%2BCjwvc3ZnPg%3D%3D%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image/svg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D"/>
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmciIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwYTBhMmUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAwMDEwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJ3MSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNjBjOGZmIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjMWE3ZmZmIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwNDBjYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idzIiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzgwZDhmZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzIwOTBmZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDUwZGQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InczIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNhMGU4ZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiM0MGE4ZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDA2MGVlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGZpbHRlciBpZD0iZ2xvdyI+CiAgICAgIDxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjgiIHJlc3VsdD0iYmx1ciIvPgogICAgICA8ZmVNZXJnZT48ZmVNZXJnZU5vZGUgaW49ImJsdXIiLz48ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiLz48L2ZlTWVyZ2U+CiAgICA8L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9Imdsb3cyIj4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iNCIgcmVzdWx0PSJibHVyIi8+CiAgICAgIDxmZU1lcmdlPjxmZU1lcmdlTm9kZSBpbj0iYmx1ciIvPjxmZU1lcmdlTm9kZSBpbj0iU291cmNlR3JhcGhpYyIvPjwvZmVNZXJnZT4KICAgIDwvZmlsdGVyPgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0idXJsKCNiZykiLz4KICA8IS0tIE91dGVyIGFyYyAtLT4KICA8cGF0aCBkPSJNIDk2IDI5MCBBIDIwMCAyMDAgMCAwIDEgNDE2IDI5MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3cxKSIgc3Ryb2tlLXdpZHRoPSI0OCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWx0ZXI9InVybCgjZ2xvdykiLz4KICA8IS0tIE1pZGRsZSBhcmMgLS0+CiAgPHBhdGggZD0iTSAxNDggMzEwIEEgMTQwIDE0MCAwIDAgMSAzNjQgMzEwIiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjdzIpIiBzdHJva2Utd2lkdGg9IjQyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbHRlcj0idXJsKCNnbG93KSIvPgogIDwhLS0gSW5uZXIgYXJjIC0tPgogIDxwYXRoIGQ9Ik0gMjAwIDMzMiBBIDgwIDgwIDAgMCAxIDMxMiAzMzIiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCN3MykiIHN0cm9rZS13aWR0aD0iMzYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2dsb3cpIi8+CiAgPCEtLSBEb3QgLS0+CiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMzkwIiByPSIyOCIgZmlsbD0iIzYwYzhmZiIgZmlsdGVyPSJ1cmwoI2dsb3cyKSIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjM5MCIgcj0iMTgiIGZpbGw9IiNhMGU4ZmYiLz4KICA8IS0tIFRvcCBzaGluZSBvbiBvdXRlciBhcmMgLS0+CiAgPHBhdGggZD0iTSAxMTIgMjgyIEEgMTk2IDE5NiAwIDAgMSAyNTYgMTgwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjI1KSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg=="/>
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22WIPULSCAN%20PRO%22%2C%22short_name%22%3A%22WIPULSCAN%22%2C%22description%22%3A%22Signal%20Scanner%20%5Cu00b7%20Cobra%20Dynamics%22%2C%22start_url%22%3A%22./%22%2C%22display%22%3A%22fullscreen%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%23050a18%22%2C%22theme_color%22%3A%22%234499ff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI%2BPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBkMWEzYSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA1MGExOCIvPjwvbGluZWFyR3JhZGllbnQ%2BPGxpbmVhckdyYWRpZW50IGlkPSJhMSIgeDE9Ii41IiB5MT0iMCIgeDI9Ii41IiB5Mj0iMSI%2BPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2E4ZDhmZiIvPjxzdG9wIG9mZnNldD0iMzAlIiBzdG9wLWNvbG9yPSIjNDQ5OWZmIi8%2BPHN0b3Agb2Zmc2V0PSI3MCUiIHN0b3AtY29sb3I9IiMxMTU1Y2MiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDMzYWEiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYTIiIHgxPSIuNSIgeTE9IjAiIHgyPSIuNSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjMGU4ZmYiLz48c3RvcCBvZmZzZXQ9IjMwJSIgc3RvcC1jb2xvcj0iIzU1YWFmZiIvPjxzdG9wIG9mZnNldD0iNzAlIiBzdG9wLWNvbG9yPSIjMjI2NmRkIi8%2BPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDA0NGJiIi8%2BPC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImEzIiB4MT0iLjUiIHkxPSIwIiB4Mj0iLjUiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZDBmMGZmIi8%2BPHN0b3Agb2Zmc2V0PSIzMCUiIHN0b3AtY29sb3I9IiM2NmJiZmYiLz48c3RvcCBvZmZzZXQ9IjcwJSIgc3RvcC1jb2xvcj0iIzMzNzdlZSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwNTVjYyIvPjwvbGluZWFyR3JhZGllbnQ%2BPHJhZGlhbEdyYWRpZW50IGlkPSJkb3QiIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjYwJSI%2BPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg4Y2NmZiIvPjxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMjI1NWNjIi8%2BPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAxMTY2Ii8%2BPC9yYWRpYWxHcmFkaWVudD48ZmlsdGVyIGlkPSJzaCI%2BPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjQiIHN0ZERldmlhdGlvbj0iOCIgZmxvb2QtY29sb3I9IiMwMDExNjYiIGZsb29kLW9wYWNpdHk9Ii43Ii8%2BPC9maWx0ZXI%2BPC9kZWZzPjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTA4IiBmaWxsPSJ1cmwoI2JnKSIvPjxnIGZpbHRlcj0idXJsKCNzaCkiPjxwYXRoIGQ9Ik0yNTYgMTAwIEMgMTMwIDEwMCAzMCAxODUgMzAgMjg1IEMgMzAgMjk1IDM1IDMxMCA0NCAzMjAgTCA4MCAyOTAgQyA4MCAyOTAgMTAwIDE4NSAyNTYgMTg1IEMgNDEyIDE4NSA0MzIgMjkwIDQzMiAyOTAgTCA0NjggMzIwIEMgNDc3IDMxMCA0ODIgMjk1IDQ4MiAyODUgQyA0ODIgMTg1IDM4MiAxMDAgMjU2IDEwMCBaIiBmaWxsPSJ1cmwoI2ExKSIvPjxwYXRoIGQ9Ik0yNTYgMTk1IEMgMTYwIDE5NSA5MCAyNTggOTAgMzIwIEMgOTAgMzMyIDk1IDM0NSAxMDMgMzU0IEwgMTM4IDMyNSBDIDEzOCAzMjUgMTUwIDI3MCAyNTYgMjcwIEMgMzYyIDI3MCAzNzQgMzI1IDM3NCAzMjUgTCA0MDkgMzU0IEMgNDE3IDM0NSA0MjIgMzMyIDQyMiAzMjAgQyA0MjIgMjU4IDM1MiAxOTUgMjU2IDE5NSBaIiBmaWxsPSJ1cmwoI2EyKSIvPjxwYXRoIGQ9Ik0yNTYgMjg1IEMgMjAyIDI4NSAxNjMgMzE4IDE2MyAzNTAgQyAxNjMgMzYwIDE2NyAzNzIgMTc0IDM4MCBMIDIwOCAzNTIgQyAyMDggMzUyIDIxOCAzMzUgMjU2IDMzNSBDIDI5NCAzMzUgMzA0IDM1MiAzMDQgMzUyIEwgMzM4IDM4MCBDIDM0NSAzNzIgMzQ5IDM2MCAzNDkgMzUwIEMgMzQ5IDMxOCAzMTAgMjg1IDI1NiAyODUgWiIgZmlsbD0idXJsKCNhMykiLz48ZWxsaXBzZSBjeD0iMjU2IiBjeT0iNDE1IiByeD0iMzgiIHJ5PSIzOCIgZmlsbD0idXJsKCNkb3QpIi8%2BPC9nPjxwYXRoIGQ9Ik0gNzAgMTMwIEEgMjIwIDIyMCAwIDAgMSAyNTYgMTA4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjIpIiBzdHJva2Utd2lkdGg9IjE0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4%3D%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image/svg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%2C%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI%2BPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBkMWEzYSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA1MGExOCIvPjwvbGluZWFyR3JhZGllbnQ%2BPGxpbmVhckdyYWRpZW50IGlkPSJhMSIgeDE9Ii41IiB5MT0iMCIgeDI9Ii41IiB5Mj0iMSI%2BPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2E4ZDhmZiIvPjxzdG9wIG9mZnNldD0iMzAlIiBzdG9wLWNvbG9yPSIjNDQ5OWZmIi8%2BPHN0b3Agb2Zmc2V0PSI3MCUiIHN0b3AtY29sb3I9IiMxMTU1Y2MiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDMzYWEiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYTIiIHgxPSIuNSIgeTE9IjAiIHgyPSIuNSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjMGU4ZmYiLz48c3RvcCBvZmZzZXQ9IjMwJSIgc3RvcC1jb2xvcj0iIzU1YWFmZiIvPjxzdG9wIG9mZnNldD0iNzAlIiBzdG9wLWNvbG9yPSIjMjI2NmRkIi8%2BPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDA0NGJiIi8%2BPC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImEzIiB4MT0iLjUiIHkxPSIwIiB4Mj0iLjUiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZDBmMGZmIi8%2BPHN0b3Agb2Zmc2V0PSIzMCUiIHN0b3AtY29sb3I9IiM2NmJiZmYiLz48c3RvcCBvZmZzZXQ9IjcwJSIgc3RvcC1jb2xvcj0iIzMzNzdlZSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwNTVjYyIvPjwvbGluZWFyR3JhZGllbnQ%2BPHJhZGlhbEdyYWRpZW50IGlkPSJkb3QiIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjYwJSI%2BPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg4Y2NmZiIvPjxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMjI1NWNjIi8%2BPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAxMTY2Ii8%2BPC9yYWRpYWxHcmFkaWVudD48ZmlsdGVyIGlkPSJzaCI%2BPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjQiIHN0ZERldmlhdGlvbj0iOCIgZmxvb2QtY29sb3I9IiMwMDExNjYiIGZsb29kLW9wYWNpdHk9Ii43Ii8%2BPC9maWx0ZXI%2BPC9kZWZzPjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTA4IiBmaWxsPSJ1cmwoI2JnKSIvPjxnIGZpbHRlcj0idXJsKCNzaCkiPjxwYXRoIGQ9Ik0yNTYgMTAwIEMgMTMwIDEwMCAzMCAxODUgMzAgMjg1IEMgMzAgMjk1IDM1IDMxMCA0NCAzMjAgTCA4MCAyOTAgQyA4MCAyOTAgMTAwIDE4NSAyNTYgMTg1IEMgNDEyIDE4NSA0MzIgMjkwIDQzMiAyOTAgTCA0NjggMzIwIEMgNDc3IDMxMCA0ODIgMjk1IDQ4MiAyODUgQyA0ODIgMTg1IDM4MiAxMDAgMjU2IDEwMCBaIiBmaWxsPSJ1cmwoI2ExKSIvPjxwYXRoIGQ9Ik0yNTYgMTk1IEMgMTYwIDE5NSA5MCAyNTggOTAgMzIwIEMgOTAgMzMyIDk1IDM0NSAxMDMgMzU0IEwgMTM4IDMyNSBDIDEzOCAzMjUgMTUwIDI3MCAyNTYgMjcwIEMgMzYyIDI3MCAzNzQgMzI1IDM3NCAzMjUgTCA0MDkgMzU0IEMgNDE3IDM0NSA0MjIgMzMyIDQyMiAzMjAgQyA0MjIgMjU4IDM1MiAxOTUgMjU2IDE5NSBaIiBmaWxsPSJ1cmwoI2EyKSIvPjxwYXRoIGQ9Ik0yNTYgMjg1IEMgMjAyIDI4NSAxNjMgMzE4IDE2MyAzNTAgQyAxNjMgMzYwIDE2NyAzNzIgMTc0IDM4MCBMIDIwOCAzNTIgQyAyMDggMzUyIDIxOCAzMzUgMjU2IDMzNSBDIDI5NCAzMzUgMzA0IDM1MiAzMDQgMzUyIEwgMzM4IDM4MCBDIDM0NSAzNzIgMzQ5IDM2MCAzNDkgMzUwIEMgMzQ5IDMxOCAzMTAgMjg1IDI1NiAyODUgWiIgZmlsbD0idXJsKCNhMykiLz48ZWxsaXBzZSBjeD0iMjU2IiBjeT0iNDE1IiByeD0iMzgiIHJ5PSIzOCIgZmlsbD0idXJsKCNkb3QpIi8%2BPC9nPjxwYXRoIGQ9Ik0gNzAgMTMwIEEgMjIwIDIyMCAwIDAgMSAyNTYgMTA4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjIpIiBzdHJva2Utd2lkdGg9IjE0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4%3D%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image/svg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBkMWEzYSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA1MGExOCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJhMSIgeDE9Ii41IiB5MT0iMCIgeDI9Ii41IiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2E4ZDhmZiIvPjxzdG9wIG9mZnNldD0iMzAlIiBzdG9wLWNvbG9yPSIjNDQ5OWZmIi8+PHN0b3Agb2Zmc2V0PSI3MCUiIHN0b3AtY29sb3I9IiMxMTU1Y2MiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDMzYWEiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYTIiIHgxPSIuNSIgeTE9IjAiIHgyPSIuNSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjMGU4ZmYiLz48c3RvcCBvZmZzZXQ9IjMwJSIgc3RvcC1jb2xvcj0iIzU1YWFmZiIvPjxzdG9wIG9mZnNldD0iNzAlIiBzdG9wLWNvbG9yPSIjMjI2NmRkIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDA0NGJiIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImEzIiB4MT0iLjUiIHkxPSIwIiB4Mj0iLjUiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZDBmMGZmIi8+PHN0b3Agb2Zmc2V0PSIzMCUiIHN0b3AtY29sb3I9IiM2NmJiZmYiLz48c3RvcCBvZmZzZXQ9IjcwJSIgc3RvcC1jb2xvcj0iIzMzNzdlZSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwNTVjYyIvPjwvbGluZWFyR3JhZGllbnQ+PHJhZGlhbEdyYWRpZW50IGlkPSJkb3QiIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjYwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg4Y2NmZiIvPjxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMjI1NWNjIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAxMTY2Ii8+PC9yYWRpYWxHcmFkaWVudD48ZmlsdGVyIGlkPSJzaCI+PGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjQiIHN0ZERldmlhdGlvbj0iOCIgZmxvb2QtY29sb3I9IiMwMDExNjYiIGZsb29kLW9wYWNpdHk9Ii43Ii8+PC9maWx0ZXI+PC9kZWZzPjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTA4IiBmaWxsPSJ1cmwoI2JnKSIvPjxnIGZpbHRlcj0idXJsKCNzaCkiPjxwYXRoIGQ9Ik0yNTYgMTAwIEMgMTMwIDEwMCAzMCAxODUgMzAgMjg1IEMgMzAgMjk1IDM1IDMxMCA0NCAzMjAgTCA4MCAyOTAgQyA4MCAyOTAgMTAwIDE4NSAyNTYgMTg1IEMgNDEyIDE4NSA0MzIgMjkwIDQzMiAyOTAgTCA0NjggMzIwIEMgNDc3IDMxMCA0ODIgMjk1IDQ4MiAyODUgQyA0ODIgMTg1IDM4MiAxMDAgMjU2IDEwMCBaIiBmaWxsPSJ1cmwoI2ExKSIvPjxwYXRoIGQ9Ik0yNTYgMTk1IEMgMTYwIDE5NSA5MCAyNTggOTAgMzIwIEMgOTAgMzMyIDk1IDM0NSAxMDMgMzU0IEwgMTM4IDMyNSBDIDEzOCAzMjUgMTUwIDI3MCAyNTYgMjcwIEMgMzYyIDI3MCAzNzQgMzI1IDM3NCAzMjUgTCA0MDkgMzU0IEMgNDE3IDM0NSA0MjIgMzMyIDQyMiAzMjAgQyA0MjIgMjU4IDM1MiAxOTUgMjU2IDE5NSBaIiBmaWxsPSJ1cmwoI2EyKSIvPjxwYXRoIGQ9Ik0yNTYgMjg1IEMgMjAyIDI4NSAxNjMgMzE4IDE2MyAzNTAgQyAxNjMgMzYwIDE2NyAzNzIgMTc0IDM4MCBMIDIwOCAzNTIgQyAyMDggMzUyIDIxOCAzMzUgMjU2IDMzNSBDIDI5NCAzMzUgMzA0IDM1MiAzMDQgMzUyIEwgMzM4IDM4MCBDIDM0NSAzNzIgMzQ5IDM2MCAzNDkgMzUwIEMgMzQ5IDMxOCAzMTAgMjg1IDI1NiAyODUgWiIgZmlsbD0idXJsKCNhMykiLz48ZWxsaXBzZSBjeD0iMjU2IiBjeT0iNDE1IiByeD0iMzgiIHJ5PSIzOCIgZmlsbD0idXJsKCNkb3QpIi8+PC9nPjxwYXRoIGQ9Ik0gNzAgMTMwIEEgMjIwIDIyMCAwIDAgMSAyNTYgMTA4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjIpIiBzdHJva2Utd2lkdGg9IjE0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4="/>
 <!-- apple meta already in manifest -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>WIPULSCAN · PRO</title>
+<meta name="description" content="WIPULSCAN PRO — Signal Scanner App by Cobra Dynamics. Misst WLAN und Mobilfunk-Signalqualität in Echtzeit mit AR-Overlay, Heatmap und Radar."/>
+<meta name="keywords" content="WiFi Scanner, Signal Strength, Network Quality, AR, Cobra Dynamics"/>
+<meta name="author" content="Dennis Stein, Cobra Dynamics"/>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cinzel+Decorative:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -108,9 +111,10 @@ html,body{
   position:fixed;inset:0;z-index:300;
   background:linear-gradient(165deg,#00001a,#000);
   display:none;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:calc(28px + var(--st)) 22px calc(36px + var(--sb));
-  overflow-y:auto;
+  align-items:center;
+  padding:calc(28px + var(--st)) 22px calc(28px + var(--sb));
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  gap:0;
 }
 .c-brand{
   font-family:'Cinzel Decorative',serif;
@@ -231,10 +235,17 @@ html,body{
 /* ── GAUGE AREA (flex:1 fills remaining space) ── */
 #gauge-area{
   flex:1;display:flex;align-items:center;justify-content:center;
-  position:relative;min-height:0;
+  position:relative;min-height:200px;overflow:hidden;
 }
 #gauge-canvas{display:block}
-#status-badge{display:none} /* qstrip shows status — badge removed */
+#status-badge{
+  position:absolute;
+  bottom:8px;left:50%;transform:translateX(-50%);
+  font-size:clamp(13px,3.5vw,18px);font-weight:700;
+  letter-spacing:.04em;padding:7px 22px;border-radius:24px;
+  white-space:nowrap;transition:all .4s;
+  display:none;pointer-events:none;
+}
 
 /* ── BOTTOM PANEL ── */
 #bottom{
@@ -285,9 +296,10 @@ html,body{
 .stat:nth-child(3),.stat:nth-child(4){border-bottom:none}
 /* Value */
 .sv{
-  font-size:clamp(20px,5.5vw,28px);font-weight:700;
+  font-size:clamp(16px,4.5vw,24px);font-weight:700;
   line-height:1;transition:color .4s;
-  letter-spacing:-.01em;
+  letter-spacing:-.01em;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;max-width:100%;
 }
 /* Label */
 .sl{
@@ -329,6 +341,7 @@ html,body{
 }
 #btn-start.scanning{background:rgba(50,50,60,.92)}
 #btn-start:active{transform:scale(.97)}
+#btn-start,#btn-reset,#btn-dl{touch-action:manipulation}
 #btn-reset{
   flex:1;padding:16px 8px;
   border-radius:12px;border:none;cursor:pointer;
@@ -351,8 +364,8 @@ html,body{
 #f-info.on{display:flex}
 #f-pro{
   position:fixed;z-index:12;
-  font-family:'Cinzel',serif;font-size:9px;font-weight:700;
-  letter-spacing:.14em;padding:6px 13px;
+  font-family:'Cinzel',serif;font-size:8px;font-weight:700;
+  letter-spacing:.12em;padding:5px 11px;
   background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);
   border-radius:20px;color:rgba(212,175,55,.8);cursor:pointer;
   display:none;align-items:center;
@@ -402,6 +415,16 @@ html,body{
   font-size:8px;letter-spacing:.18em;color:rgba(255,255,255,.25);cursor:pointer;
 }
 
+/* Toast notification */
+#toast{
+  position:fixed;bottom:calc(100px + var(--sb));left:50%;transform:translateX(-50%);
+  z-index:500;padding:12px 22px;border-radius:24px;
+  background:rgba(0,0,0,.85);border:1px solid rgba(212,175,55,.35);
+  color:rgba(212,175,55,.9);font-size:10px;letter-spacing:.18em;
+  white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .3s;
+}
+#toast.show{opacity:1}
 /* Flash */
 @keyframes vFlash{0%{opacity:.4}60%{opacity:1}100%{opacity:1}}
 .flash{animation:vFlash .3s ease forwards}
@@ -417,6 +440,7 @@ html,body{
 <body>
 
 <!-- ════ TAP GATE ════ -->
+<div id="toast"></div>
 <div id="tapgate" onclick="W.tapGo()">
   <div class="tg-rings">
     <div class="tg-ring"></div>
@@ -439,18 +463,52 @@ html,body{
 <div id="consent">
   <div class="c-brand">WIPULSCAN · PRO</div>
   <div class="c-sub">COBRA DYNAMICS · 2026</div>
+
   <div class="c-box">
-    <div class="c-h">DATENSCHUTZ & HINWEISE</div>
-    <div class="c-p">Diese App misst WLAN/Mobilfunk-Signalqualität via Network Information API &amp; Latenz-Pings. Kamera und Bewegungssensoren werden lokal verarbeitet. Keine Daten werden übertragen oder gespeichert.<br><br>
-    Messwerte wie dBm und SNR sind Schätzwerte — direkter Hardware-RSSI ist in Web-Apps systemseitig gesperrt.<br><br>
-    Cobra Dynamics · Dennis Stein · Nördliche Ringstraße 75 · 63225 Langen</div>
+    <div class="c-h">📡 &nbsp; BERECHTIGUNGEN &amp; DATENSCHUTZ</div>
+    <div class="c-p">
+      <span style="color:rgba(212,175,55,.8);letter-spacing:.12em">KAMERA</span><br>
+      Wird ausschließlich zur AR-Visualisierung auf dem Gerät verwendet. Keine Aufnahme, keine Speicherung, keine Übertragung.<br><br>
+      <span style="color:rgba(212,175,55,.8);letter-spacing:.12em">BEWEGUNG &amp; AUSRICHTUNG</span><br>
+      Für die Walking-Radar-Funktion (Dead Reckoning). Verarbeitung nur lokal auf dem Gerät.<br><br>
+      <span style="color:rgba(212,175,55,.8);letter-spacing:.12em">NETZWERK-MESSUNG</span><br>
+      Signalqualität via Network Information API &amp; Latenz-Ping. Alle Messwerte (dBm, SNR) sind Schätzwerte — direkter Hardware-RSSI ist in Web-Apps systemseitig gesperrt.<br><br>
+      <span style="color:rgba(255,255,255,.35)">Es werden keinerlei persönliche Daten erhoben, gespeichert oder an Dritte übertragen. Alle Verarbeitungen finden ausschließlich lokal auf Ihrem Gerät statt.</span><br><br>
+      <span style="color:rgba(212,175,55,.35)">Cobra Dynamics · Dennis Stein · Nördliche Ringstraße 75 · 63225 Langen · DSGVO-konform</span>
+    </div>
   </div>
+
+  <!-- Berechtigungs-Karten -->
+  <div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.15);border-radius:8px">
+      <span style="font-size:20px">📷</span>
+      <div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--gold)">KAMERAZUGRIFF</div>
+        <div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,.4);line-height:1.5">AR-Overlay · Nur lokal · Keine Speicherung</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.15);border-radius:8px">
+      <span style="font-size:20px">🧭</span>
+      <div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--gold)">BEWEGUNGSSENSOREN</div>
+        <div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,.4);line-height:1.5">Radar-Funktion · Nur lokal · Keine Speicherung</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.15);border-radius:8px">
+      <span style="font-size:20px">📶</span>
+      <div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--gold)">NETZWERK-DATEN</div>
+        <div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,.4);line-height:1.5">Signal-Messung · Keine Weitergabe · Anonym</div>
+      </div>
+    </div>
+  </div>
+
   <div class="c-chk">
-    <input type="checkbox" id="chk" onchange="document.getElementById('c-btn').disabled=!this.checked"/>
-    <span>Ich habe die Hinweise gelesen und stimme der lokalen Verarbeitung zu. (DSGVO Art. 6 Abs. 1 lit. a)</span>
+    <input type="checkbox" id="chk" onchange="var b=document.getElementById('c-btn');b.disabled=!this.checked;b.style.opacity=this.checked?'1':'0.25';b.style.borderColor=this.checked?'var(--gold)':'rgba(212,175,55,.3)'"/>
+    <span>Ich stimme der lokalen Verarbeitung dieser Daten zu und habe die Datenschutzhinweise gelesen. (DSGVO Art. 6 Abs. 1 lit. a)</span>
   </div>
-  <button class="c-ok" id="c-btn" disabled onclick="W.acceptConsent()">◈ &nbsp; ZUSTIMMEN &amp; STARTEN &nbsp; ◈</button>
-  <div class="c-ft">WIPULSCAN PRO · Version 7.0 · Alle Rechte vorbehalten</div>
+  <button class="c-ok" id="c-btn" disabled onclick="W.acceptConsent()">◈ &nbsp; ZUSTIMMEN &amp; APP STARTEN &nbsp; ◈</button>
+  <div class="c-ft">WIPULSCAN PRO · v8.0 · Cobra Dynamics · Alle Rechte vorbehalten<br>Keine Datenweitergabe · Kein Tracking · DSGVO-konform</div>
 </div>
 
 <!-- ════ CAMERA ════ -->
@@ -487,8 +545,8 @@ html,body{
   <!-- Bottom Panel -->
   <div id="bottom">
     <!-- Quality summary strip -->
-    <div id="qstrip">
-      <span id="qs-label">—</span>
+    <div id="qstrip" style="opacity:0;transition:opacity .5s">
+      <span id="qs-label">BEREIT</span>
       <span id="qs-dbm">— dBm</span>
       <span id="qs-type">—</span>
     </div>
@@ -519,6 +577,7 @@ html,body{
         <span id="bi">📡</span><span id="bl">SCANNEN</span>
       </button>
       <button id="btn-reset" onclick="W.resetAll()">↺ Reset</button>
+      <button id="btn-dl" onclick="W.downloadData()" title="Daten exportieren" style="flex:0 0 48px;padding:16px 0;border-radius:12px;border:none;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.28);color:rgba(212,175,55,.8);font-size:16px;cursor:pointer">⬇</button>
     </div>
   </div>
 </div><!-- /scanner-ui -->
@@ -641,7 +700,7 @@ async function ping(){
 /* ── STATE ── */
 var S={
   on:false,sSig:0,tSig:0,dSig:0,
-  tPing:0,tJit:0,tDL:0,tDBm:0,peak:0,peakSet:false,_lastPing:0,
+  tPing:0,tJit:0,tDL:0,tDBm:-85,peak:0,peakSet:false,_lastPing:0,
   base:42,proUnlocked:false,frame:0
 };
 var DOTS=[],JTLOG=[],MAX_DOTS=8;
@@ -821,7 +880,8 @@ function paintDOM(trend){
   // Status badge
   var b=$('status-badge');
   b.textContent=CLV[lv].lbl;b.style.color=col;
-  b.style.background='rgba(0,0,0,.6)';b.style.border='1.5px solid '+col;
+  b.style.background='rgba(0,0,0,.65)';b.style.border='1.5px solid '+col;
+  b.style.display='block';
   // Quality strip
   var ql=$('qs-label'),qd=$('qs-dbm'),qt=$('qs-type');
   if(ql){ql.textContent=CLV[lv].lbl;ql.style.color=col;}
@@ -835,14 +895,17 @@ function paintDOM(trend){
     var ctype=conn&&conn.type&&conn.type!=='unknown'?conn.type.toUpperCase():'';
     qt.textContent=etype||ctype||'—';
   }
+  /* Show qstrip on first measurement */
+  var qs=$('qstrip');if(qs)qs.style.opacity='1';
   // Best
   if(S.peakSet){
-    $('best-txt').textContent=Math.round(S.peak)+'% BEST';
-    setSV('sv-best',Math.round(S.peak)+'%','var(--green)');
+    var peakPct=Math.round(S.peak);
+    var bt=$('best-txt');if(bt)bt.textContent=peakPct+'% BEST';
+    setSV('sv-best',peakPct+'%','var(--green)');
   }
   // Stats
   setSV('sv-ping',S.tPing+'ms',S.tPing<80?'var(--green)':S.tPing<160?'#ffc107':'var(--red)');
-  setSV('sv-jit',S.tJit+'ms',S.tJit<20?'var(--green)':S.tJit<50?'#ffc107':'var(--red)');
+  setSV('sv-jit',S.tJit>0?S.tJit+'ms':'—',S.tJit<20?'var(--green)':S.tJit<50?'#ffc107':'var(--red)');
   setSV('sv-dl',S.tDL?S.tDL.toFixed(1):'—','#fff');
   var tr=$('sv-trend');if(tr)tr.textContent=trend||'';
   // Dots
@@ -886,13 +949,30 @@ W.stopScan=function(){_stopScan();};
 /* ── CAMERA ── */
 async function startCam(){
   var v=$('cam');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    $('cnote').style.display='flex';return;
+  }
   var opts=[
-    {video:{facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false},
-    {video:{facingMode:'environment'},audio:false},{video:true,audio:false}
+    {video:{facingMode:{exact:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},
+    {video:{facingMode:'environment'},audio:false},
+    {video:{facingMode:'user'},audio:false},
+    {video:true,audio:false}
   ];
   for(var i=0;i<opts.length;i++){
-    try{v.srcObject=await navigator.mediaDevices.getUserMedia(opts[i]);v.classList.add('live');return;}
-    catch(e){}
+    try{
+      var stream=await navigator.mediaDevices.getUserMedia(opts[i]);
+      v.srcObject=stream;
+      await v.play().catch(function(){});
+      v.classList.add('live');
+      return;
+    }catch(e){
+      if(e.name==='NotAllowedError'){
+        /* User denied — show explanation */
+        var cn=$('cnote');
+        if(cn){cn.style.display='flex';cn.innerHTML='Kamera-Zugriff verweigert<br><span style="font-size:9px;opacity:.6">Einstellungen → Safari → Kamera → Erlauben</span>';}
+        return;
+      }
+    }
   }
   $('cnote').style.display='flex';
 }
@@ -904,7 +984,7 @@ function enterScanner(){
   var sb=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sb')||'0')||0;
   $('f-info').style.bottom=(sb+168)+'px';
   $('f-pro').style.bottom=(sb+116)+'px';$('f-pro').style.right='14px';
-  initGauge();initAR();initHM();
+  initGauge();initAR();initHM();wfInit();
   /* Request motion/orientation permissions HERE — after intro, user already tapped */
   if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
     DeviceOrientationEvent.requestPermission().catch(function(){});
@@ -918,6 +998,21 @@ function enterScanner(){
 }
 
 /* ── RESET ── */
+W.downloadData=function(){
+  var lines=['Zeit,Signal%,dBm,Ping ms,Jitter ms,Download Mbps'];
+  var now=new Date().toISOString();
+  lines.push(now+','+Math.round(S.dSig)+','+S.tDBm+','+S.tPing+','+S.tJit+','+(S.tDL||'-'));
+  DOTS.forEach(function(d,i){
+    lines.push('Messung '+(i+1)+',-,'+d+',-,-,-');
+  });
+  var csv=lines.join(String.fromCharCode(13,10));
+  var blob=new Blob([csv],{type:'text/csv'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='WIPULSCAN_'+Date.now()+'.csv';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+};
 W.resetAll=function(){
   _stopScan();
   S.dSig=0;S.tSig=0;S.sSig=0;S.peak=0;S.peakSet=false;
@@ -930,6 +1025,9 @@ W.resetAll=function(){
   var b=$('status-badge');b.textContent='—';b.style.border='1px solid rgba(255,255,255,.2)';b.style.color='rgba(255,255,255,.5)';
   ['sv-ping','sv-jit','sv-dl','sv-best'].forEach(function(id){var e=$(id);if(e){e.textContent='—';e.style.color='#fff';}});
   drawGauge(0);
+  /* Re-enable scan button */
+  var bs=$('btn-start');
+  if(bs){bs.classList.remove('scanning');$('bi').textContent='📡';$('bl').textContent='SCANNEN';}
 };
 
 /* ── OVERLAYS ── */
@@ -1391,28 +1489,54 @@ function ciStart(){
   BLD.nextBeat=0;BLD.beatCount=0;BLD.rings=[];BLD.logoAt=0;BLD.logoShown=false;BLD.flashAt=0;
   CI.irisStart=0;CI.waitTap=false;CI.ifx=0;CI.frags=[];CI.fragsOk=false;
   CI.running=true;
-  el.addEventListener('click',function onTap(){
+  /* Touch/click handler — bleibt bis Iris startet */
+  function onIntroContinue(e){
     ensureAudio();
-    if(CI.waitTap&&!CI.irisStart)CI.irisStart=performance.now();
-    el.removeEventListener('click',onTap);
-  });
-  setTimeout(function(){if(CI.running&&CI.waitTap&&!CI.irisStart)CI.irisStart=performance.now();},20000);
+    if(!CI.running)return;
+    if(CI.waitTap&&!CI.irisStart){
+      CI.irisStart=performance.now();
+      el.removeEventListener('touchend',onIntroContinue);
+      el.removeEventListener('click',onIntroContinue);
+    }
+  }
+  el.addEventListener('touchend',onIntroContinue,{passive:true});
+  el.addEventListener('click',onIntroContinue);
+  /* Failsafe after 25s */
+  setTimeout(function(){
+    if(CI.running&&CI.waitTap&&!CI.irisStart){
+      CI.irisStart=performance.now();
+    }
+  },25000);
   CI.start=performance.now();
   CI.raf=requestAnimationFrame(ciLoop);
 }
 function ciDone(){
   if(!CI.running)return;CI.running=false;cancelAnimationFrame(CI.raf);
-  var el=$('intro');el.style.transition='opacity .45s';el.style.opacity='0';
-  setTimeout(function(){el.style.display='none';},460);
+  var el=$('intro');
+  el.style.transition='opacity .4s';el.style.opacity='0';
+  setTimeout(function(){
+    el.style.display='none';
+    el.style.pointerEvents='none';
+    el.style.zIndex='-1';
+  },420);
+  /* Start scanner immediately — don't wait for fade */
   enterScanner();
 }
 W.skipIntro=function(){
   if(!CI.running)return;CI.running=false;cancelAnimationFrame(CI.raf);
   var el=$('intro');el.style.transition='opacity .25s';el.style.opacity='0';
-  setTimeout(function(){el.style.display='none';enterScanner();},260);
+  setTimeout(function(){el.style.display='none';el.style.pointerEvents='none';el.style.zIndex='-1';},250);
+  enterScanner();
 };
 
 /* ── TAP GATE ── */
+/* Toast helper */
+function showToast(msg,dur){
+  var t=$('toast');if(!t)return;
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},dur||2800);
+}
+
 W.tapGo=function(){
   ensureAudio();
   /* Permissions are requested in enterScanner() — AFTER the intro */
@@ -1463,7 +1587,7 @@ window.addEventListener('appinstalled',function(){
   _deferredPrompt=null;
   W.closeInstall();
   var tbi=$('tb-install');if(tbi)tbi.style.display='none';
-  alert('WIPULSCAN PRO wurde installiert! ✓');
+  showToast('WIPULSCAN PRO installiert ✓');
 });
 
 /* Platform detection for install hints */

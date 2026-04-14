@@ -949,29 +949,32 @@ W.stopScan=function(){_stopScan();};
 /* ── CAMERA ── */
 async function startCam(){
   var v=$('cam');
+  /* Check API availability */
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     $('cnote').style.display='flex';return;
   }
   var opts=[
-    {video:{facingMode:{exact:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},
+    {video:{facingMode:{exact:'environment'}},audio:false},
     {video:{facingMode:'environment'},audio:false},
-    {video:{facingMode:'user'},audio:false},
     {video:true,audio:false}
   ];
   for(var i=0;i<opts.length;i++){
     try{
       var stream=await navigator.mediaDevices.getUserMedia(opts[i]);
       v.srcObject=stream;
-      await v.play().catch(function(){});
+      /* Let autoplay+playsinline handle playback — don't call play() manually */
       v.classList.add('live');
       return;
     }catch(e){
-      if(e.name==='NotAllowedError'){
-        /* User denied — show explanation */
+      if(e.name==='NotAllowedError'||e.name==='PermissionDeniedError'){
         var cn=$('cnote');
-        if(cn){cn.style.display='flex';cn.innerHTML='Kamera-Zugriff verweigert<br><span style="font-size:9px;opacity:.6">Einstellungen → Safari → Kamera → Erlauben</span>';}
+        if(cn){
+          cn.style.display='flex';
+          cn.innerHTML='📷 Kamera verweigert<br><span style="font-size:9px;opacity:.55;letter-spacing:.08em">Einstellungen → Safari → Kamera → Erlauben</span>';
+        }
         return;
       }
+      /* NotFoundError or other — try next option */
     }
   }
   $('cnote').style.display='flex';

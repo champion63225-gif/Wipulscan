@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#000000"/>
+<meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="WIPULSCAN"/>
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22WIPULSCAN+PRO%22%2C%22short_name%22%3A%22WIPULSCAN%22%2C%22description%22%3A%22Signal+Scanner+by+Cobra+Dynamics%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22fullscreen%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23d4af37%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg+xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27+viewBox%3D%270+0+512+512%27%253E%253Crect+width%3D%27512%27+height%3D%27512%27+rx%3D%2780%27+fill%3D%27%23000%27%2F%253E%253Ctext+x%3D%27256%27+y%3D%27320%27+font-size%3D%27280%27+text-anchor%3D%27middle%27+fill%3D%27%23d4af37%27%253E%F0%9F%93%B6%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any+maskable%22%7D%5D%7D"/>
+<!-- apple meta already in manifest -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>WIPULSCAN · PRO</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cinzel+Decorative:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
@@ -238,25 +244,66 @@ html,body{
 /* ── BOTTOM PANEL ── */
 #bottom{
   flex-shrink:0;
-  padding:0 14px calc(14px + var(--sb));
-  background:linear-gradient(to top,rgba(0,0,0,.85) 70%,transparent);
+  padding:0 12px calc(12px + var(--sb));
+  background:linear-gradient(to top,rgba(0,0,0,.88) 65%,transparent);
 }
-/* Stats */
+/* Quality strip */
+#qstrip{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;margin-bottom:6px;
+  background:rgba(0,0,0,.4);border-radius:10px;
+  border:1px solid rgba(255,255,255,.06);
+}
+#qs-label{
+  font-size:13px;font-weight:700;letter-spacing:.04em;
+  transition:color .4s;
+}
+#qs-dbm{
+  font-size:11px;letter-spacing:.08em;
+  color:rgba(255,255,255,.5);
+}
+#qs-type{
+  font-size:10px;letter-spacing:.14em;
+  color:rgba(255,255,255,.35);
+}
+/* ── Stats panel: 2x2 grid on small screens ── */
 #stats{
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:4px;padding:10px 0 8px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:auto auto;
+  gap:0;
+  padding:8px 0 6px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;
+  overflow:hidden;
+  background:rgba(0,0,0,.35);
+  margin-bottom:8px;
 }
 .stat{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;
+  gap:3px;padding:10px 8px;
+  border-right:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.06);
 }
+.stat:nth-child(2n){border-right:none}
+.stat:nth-child(3),.stat:nth-child(4){border-bottom:none}
+/* Value */
 .sv{
-  font-size:clamp(18px,4.8vw,26px);font-weight:700;
+  font-size:clamp(20px,5.5vw,28px);font-weight:700;
   line-height:1;transition:color .4s;
+  letter-spacing:-.01em;
 }
-.sl{font-size:7.5px;letter-spacing:.2em;color:rgba(255,255,255,.4)}
-.st{font-size:7.5px;color:var(--green);letter-spacing:.06em;min-height:10px}
-/* Dividers */
-.stat+.stat{border-left:1px solid rgba(255,255,255,.08)}
+/* Label */
+.sl{
+  font-size:7px;letter-spacing:.22em;
+  color:rgba(255,255,255,.38);margin-top:1px;
+}
+/* Trend */
+.st{
+  font-size:7.5px;letter-spacing:.05em;
+  min-height:11px;line-height:1;
+}
 /* Dots */
 #dots-row{
   display:flex;justify-content:center;gap:6px;
@@ -443,6 +490,12 @@ html,body{
 
   <!-- Bottom Panel -->
   <div id="bottom">
+    <!-- Quality summary strip -->
+    <div id="qstrip">
+      <span id="qs-label">—</span>
+      <span id="qs-dbm">— dBm</span>
+      <span id="qs-type">—</span>
+    </div>
     <div id="stats">
       <div class="stat">
         <div class="sv" id="sv-ping">—</div>
@@ -455,11 +508,11 @@ html,body{
       </div>
       <div class="stat">
         <div class="sv" id="sv-dl">—</div>
-        <div class="sl">MBPS</div>
+        <div class="sl">DOWNLOAD</div>
       </div>
       <div class="stat">
         <div class="sv" id="sv-best" style="color:var(--green)">—</div>
-        <div class="sl">BEST</div>
+        <div class="sl">BEST %</div>
       </div>
     </div>
     <div id="dots-row"></div>
@@ -482,6 +535,7 @@ html,body{
 <div id="info-ov" class="overlay">
   <button class="ov-close" onclick="W.closeInfo()">✕</button>
   <div class="ov-h">ÜBER WIPULSCAN PRO</div>
+  <button onclick="W.openInstall()" style="width:100%;padding:13px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.3);border-radius:8px;color:rgba(212,175,55,.8);font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.14em;cursor:pointer;margin-bottom:18px">📲 &nbsp; ALS APP AUF HOME-BILDSCHIRM</button>
   <div class="ov-p"><b style="color:var(--gold)">SIGNAL %</b> — Echtzeit-Qualitätsscore (Downlink + RTT + Ping).</div>
   <div class="ov-p"><b style="color:var(--gold)">PING</b> — Gemessene Latenz via fetch()-Request.</div>
   <div class="ov-p"><b style="color:var(--gold)">JITTER</b> — Latenz-Schwankung zwischen Messungen.</div>
@@ -498,6 +552,36 @@ html,body{
     <button class="ov-btn" onclick="W.unlockPro()">◈ PRO FREISCHALTEN — €0.99</button>
     <button class="ov-skip" onclick="W.closePro()">Später</button>
   </div>
+
+<!-- ════ INSTALL OVERLAY ════ -->
+<div id="install-ov" class="overlay" style="align-items:center;justify-content:center">
+  <div style="width:100%;max-width:360px;padding:28px">
+    <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;letter-spacing:.2em;color:var(--gold);margin-bottom:6px;text-align:center">APP INSTALLIEREN</div>
+    <div style="font-size:8px;letter-spacing:.2em;color:rgba(255,255,255,.3);text-align:center;margin-bottom:24px">COBRA DYNAMICS · WIPULSCAN PRO</div>
+    <!-- Android / Chrome: automatic prompt -->
+    <button id="install-btn" onclick="W.installApp()" style="display:none;width:100%;padding:15px;background:rgba(212,175,55,.1);border:1.5px solid rgba(212,175,55,.5);border-radius:8px;color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.14em;cursor:pointer;margin-bottom:12px">
+      📲 &nbsp; ALS APP INSTALLIEREN
+    </button>
+    <!-- iOS Safari: manual instruction -->
+    <div id="ios-hint" style="display:none;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.14em;color:#fff;margin-bottom:10px">📱 iPHONE / iPAD</div>
+      <div style="font-size:9px;letter-spacing:.08em;line-height:2;color:rgba(255,255,255,.55)">
+        1. Safari-Browser: Teilen ⬆️<br>
+        2. „Zum Home-Bildschirm"<br>
+        3. „Hinzufügen" tippen
+      </div>
+    </div>
+    <!-- Desktop Chrome/Edge -->
+    <div id="desktop-hint" style="display:none;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.14em;color:#fff;margin-bottom:10px">💻 DESKTOP</div>
+      <div style="font-size:9px;letter-spacing:.08em;line-height:2;color:rgba(255,255,255,.55)">
+        Chrome: Adressleiste → Install-Icon 💻<br>
+        oder: Menü → „App installieren"
+      </div>
+    </div>
+    <button onclick="W.closeInstall()" style="width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:8px;color:rgba(255,255,255,.4);font-size:9px;letter-spacing:.2em;cursor:pointer">SCHLIESSEN</button>
+  </div>
+</div>
 </div>
 
 <script>
@@ -732,6 +816,14 @@ function paintDOM(trend){
   var b=$('status-badge');
   b.textContent=CLV[lv].lbl;b.style.color=col;
   b.style.background='rgba(0,0,0,.6)';b.style.border='1.5px solid '+col;
+  // Quality strip
+  var ql=$('qs-label'),qd=$('qs-dbm'),qt=$('qs-type');
+  if(ql){ql.textContent=CLV[lv].lbl;ql.style.color=col;}
+  if(qd){qd.textContent=Math.round(S.tDBm)+' dBm';}
+  if(qt){
+    var conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+    qt.textContent=conn&&conn.effectiveType?conn.effectiveType.toUpperCase():'—';
+  }
   // Best
   if(S.peakSet){
     $('best-txt').textContent=Math.round(S.peak)+'% BEST';
@@ -828,6 +920,13 @@ W.openInfo=function(){$('info-ov').classList.add('on');};
 W.closeInfo=function(){$('info-ov').classList.remove('on');};
 W.openPro=function(){$('prom').classList.add('on');};
 W.closePro=function(){$('prom').classList.remove('on');};
+W.openInstall=function(){$('install-ov').classList.add('on');};
+W.closeInstall=function(){$('install-ov').classList.remove('on');};
+W.installApp=function(){
+  if(!_deferredPrompt)return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(){_deferredPrompt=null;W.closeInstall();});
+};
 W.unlockPro=function(){
   S.proUnlocked=true;localStorage.setItem('wps_pro','1');
   $('f-pro').textContent='◈ PRO ✓';W.closePro();
@@ -1332,6 +1431,25 @@ if(localStorage.getItem('wps_pro')==='1'){
   S.proUnlocked=true;
   setTimeout(function(){var p=$('f-pro');if(p)p.textContent='◈ PRO ✓';},2000);
 }
+
+/* ── PWA INSTALL ── */
+var _deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();_deferredPrompt=e;
+  var btn=$('install-btn');if(btn)btn.style.display='block';
+});
+window.addEventListener('appinstalled',function(){
+  _deferredPrompt=null;W.closeInstall();
+});
+(function(){
+  var ua=navigator.userAgent;
+  var isIOS=/iphone|ipad|ipod/i.test(ua);
+  var isAndroid=/android/i.test(ua);
+  var standalone=window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches;
+  if(standalone)return;
+  if(isIOS){var h=$('ios-hint');if(h)h.style.display='block';}
+  else if(!isAndroid){var d=$('desktop-hint');if(d)d.style.display='block';}
+})();
 
 })();
 </script>

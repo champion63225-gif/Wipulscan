@@ -9,30 +9,38 @@
         body { margin:0; background:#000; overflow:hidden; }
         canvas { position:fixed; top:0; left:0; }
 
-        .main {
-            position:fixed; inset:0; display:none; flex-direction:column;
-            background: radial-gradient(circle at center, #001122 0%, #000 70%);
+        .app {
+            position:fixed; inset:0; display:none; background:radial-gradient(circle at 50% 20%, #001a33 0%, #000 70%);
+            flex-direction:column;
         }
         .header {
-            height:68px; background:rgba(0,25,45,0.95); border-bottom:1px solid #00ddff;
+            height:78px; background:rgba(0,28,55,0.95); border-bottom:2px solid #00eeff;
             display:flex; align-items:center; justify-content:space-between; padding:0 25px;
-            font-size:19px; letter-spacing:4px; color:#ccffdd;
+            font-family:'Cinzel', serif; font-size:21px; letter-spacing:5px; color:#ddffcc;
+            box-shadow:0 4px 30px rgba(0,240,255,0.15);
         }
-        .scan-frame {
-            flex:1; margin:22px; border:1px solid #00ddff; border-radius:16px; position:relative;
-            overflow:hidden; box-shadow:0 0 60px rgba(0,220,255,0.25);
+        .scan {
+            flex:1; margin:24px; border:1px solid rgba(0,240,255,0.6); border-radius:18px;
+            position:relative; overflow:hidden; box-shadow:0 0 80px rgba(0,220,255,0.4);
         }
-        .scan-line {
-            position:absolute; left:0; right:0; height:3px;
-            background:linear-gradient(90deg, transparent, #00ffcc, #00ffcc, transparent);
-            box-shadow:0 0 30px #00ffcc;
-            animation:scan 3.2s linear infinite;
+        .holo-ring {
+            position:absolute; inset:0; border:2px solid #00ffcc; border-radius:18px;
+            animation:holo 6s linear infinite;
         }
-        @keyframes scan { 0%{top:-10px} 100%{top:100%} }
+        @keyframes holo { 0%{transform:rotate(0deg); opacity:0.6} 100%{transform:rotate(360deg); opacity:0.3} }
 
-        .bottom-bar {
-            height:72px; background:rgba(0,15,30,0.9); display:flex; align-items:center; justify-content:center;
-            gap:40px; font-size:13px; letter-spacing:2px; color:#00bbff;
+        .scan-line {
+            position:absolute; left:0; right:0; height:4px; background:linear-gradient(90deg, transparent, #00ffdd, transparent);
+            box-shadow:0 0 40px #00ffdd; animation:scan 2.4s linear infinite;
+        }
+        @keyframes scan { 0%{top:-20px} 100%{top:100%} }
+
+        .data {
+            position:absolute; bottom:20px; left:20px; color:#00ffcc; font-size:13px; line-height:1.4;
+        }
+        .bottom {
+            height:82px; background:rgba(0,15,35,0.95); display:flex; align-items:center; justify-content:space-around;
+            font-size:13px; color:#88eeff; letter-spacing:2px;
         }
     </style>
 </head>
@@ -40,20 +48,27 @@
 
 <canvas id="ic"></canvas>
 
-<div id="main" class="main">
+<div id="app" class="app">
     <div class="header">
         <span>WIPULSCAN <span style="color:#ffdd88;">PRO</span></span>
-        <span style="color:#0f0; font-size:14px;">● SYSTEM ONLINE</span>
+        <span style="color:#00ffaa; font-size:14px;">● QUANTUM LINK ACTIVE</span>
     </div>
     
-    <div class="scan-frame">
+    <div class="scan">
+        <div class="holo-ring"></div>
+        <div class="holo-ring" style="animation-delay:2s"></div>
         <div class="scan-line"></div>
+        <div class="data">
+            V-POOL SIGNAL<br>
+            <span style="font-size:24px;color:#fff">98.7%</span><br>
+            COBRA-9 PROTOCOL
+        </div>
     </div>
     
-    <div class="bottom-bar">
-        <div>V-POOL ACTIVE</div>
-        <div>SIGNAL 98.4%</div>
-        <div>COBRA-7 PROTOCOL</div>
+    <div class="bottom">
+        <div>SCAN</div>
+        <div>ANALYZER</div>
+        <div>HISTORY</div>
     </div>
 </div>
 
@@ -61,8 +76,8 @@
 function ciDone(){
     document.getElementById('ic').style.opacity = '0';
     setTimeout(() => {
-        document.getElementById('main').style.display = 'flex';
-    }, 700);
+        document.getElementById('app').style.display = 'flex';
+    }, 800);
 }
 
 window.onload = startIntro;

@@ -1,32 +1,50 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#4499ff">
-    <title>WIPULSCAN · PRO</title>
-    <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div id="toast"></div>
+<script>
+// === FILM-STYLE INTRO – edel, basslastig, cinematic ===
 
-    <!-- ════ TAP GATE ════ -->
-    <div id="tapgate" onclick="W.tapGo()">
-      <div class="tgr"></div><div class="tgr"></div><div class="tgr"></div>
-      <div class="tg-ico">📶</div>
-      <div class="tg-logo">WIPULSCAN<br>PRO</div>
-      <div class="tg-sub">COBRA DYNAMICS · 2026</div>
-      <div class="tg-tap">◈ &nbsp; TIPPEN ZUM STARTEN &nbsp; ◈</div>
-    </div>
+function playCinematicFanfare(){
+  if(!CI.ac) return;
+  const ac = CI.ac;
+  const t = ac.currentTime;
 
-    <!-- Dein ganzer restlicher HTML-Inhalt (intro, consent, camera, sui usw.) kommt hier rein -->
-    <!-- (alles, was du mir gerade geschickt hast zwischen <div id="toast"></div> und dem <script>) -->
+  // Tiefer, warmer Orchestral-Bass
+  const bass = ac.createOscillator();
+  const bassGain = ac.createGain();
+  bass.type = 'sine';
+  bass.frequency.setValueAtTime(38, t);
+  bass.frequency.exponentialRampToValueAtTime(26, t+2.8);
+  bassGain.gain.setValueAtTime(0, t);
+  bassGain.gain.linearRampToValueAtTime(1.1, t+0.4);
+  bassGain.gain.exponentialRampToValueAtTime(0.001, t+3.6);
+  bass.connect(bassGain); bassGain.connect(ac.destination);
+  bass.start(t); bass.stop(t+3.8);
 
-    <script type="module" src="app.js"></script>
-</body>
-</html>
+  // Schöne, edle Melodie (wie Film-Logo)
+  const notes = [0, 4, 7, 12, 16, 19, 24]; // C-Dur Akkorde
+  const times = [0.0, 0.65, 1.35, 1.95, 2.45, 2.95, 3.45];
+
+  notes.forEach((note, i) => {
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.value = 110 * Math.pow(2, note/12); // schöner warmer Ton
+    gain.gain.setValueAtTime(0, t + times );
+    gain.gain.linearRampToValueAtTime(0.65, t + times + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + times + 2.8);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.start(t + times );
+    osc.stop(t + times + 3);
+  });
+
+  // Kleiner heller Glanz obendrauf
+  setTimeout(() => bellSound(), 420);
+}
+
+function ciLoop(now){
+  // ... (der Rest bleibt gleich, nur der Fanfare-Aufruf ändert sich)
+
+  if(la > 650 && !CI._playedFan){
+    CI._playedFan = true;
+    playCinematicFanfare();           // ← neue edle Melodie
+  }
+}
+</script>

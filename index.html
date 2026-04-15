@@ -3,72 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <title>WIPULSCAN · PRO</title>
+    <title>WIPULSCAN PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        body { margin:0; background:#000; overflow:hidden; color:#fff; font-family:'Share Tech Mono', monospace; }
+        body { margin:0; background:#000; overflow:hidden; }
         canvas { position:fixed; top:0; left:0; }
-        .screen { position:fixed; inset:0; background:#000; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; }
-        .consent { background:rgba(0,20,40,0.95); padding:30px; max-width:420px; text-align:center; }
-        button { background:#00bbff; color:#000; border:none; padding:14px 32px; font-size:15px; margin-top:20px; cursor:pointer; }
+
+        .main {
+            position:fixed; inset:0; display:none; flex-direction:column;
+            background: radial-gradient(circle at center, #001122 0%, #000 70%);
+        }
+        .header {
+            height:68px; background:rgba(0,25,45,0.95); border-bottom:1px solid #00ddff;
+            display:flex; align-items:center; justify-content:space-between; padding:0 25px;
+            font-size:19px; letter-spacing:4px; color:#ccffdd;
+        }
+        .scan-frame {
+            flex:1; margin:22px; border:1px solid #00ddff; border-radius:16px; position:relative;
+            overflow:hidden; box-shadow:0 0 60px rgba(0,220,255,0.25);
+        }
+        .scan-line {
+            position:absolute; left:0; right:0; height:3px;
+            background:linear-gradient(90deg, transparent, #00ffcc, #00ffcc, transparent);
+            box-shadow:0 0 30px #00ffcc;
+            animation:scan 3.2s linear infinite;
+        }
+        @keyframes scan { 0%{top:-10px} 100%{top:100%} }
+
+        .bottom-bar {
+            height:72px; background:rgba(0,15,30,0.9); display:flex; align-items:center; justify-content:center;
+            gap:40px; font-size:13px; letter-spacing:2px; color:#00bbff;
+        }
     </style>
 </head>
 <body>
 
-<div id="tapgate">... dein bisheriges Tapgate ...</div>
 <canvas id="ic"></canvas>
 
-<!-- CONSENT SCREEN -->
-<div id="consent" class="screen">
-    <div class="consent">
-        <h2>Datenschutz & Einwilligung</h2>
-        <p>WIPULSCAN PRO benötigt Zugriff auf Kamera und Sensoren, um zu funktionieren.</p>
-        <p>Deine Daten werden <strong>nicht</strong> gespeichert, nicht weitergeleitet und nicht für Werbung verwendet.</p>
-        <p>Alle Scans bleiben lokal auf deinem Gerät.</p>
-        <button onclick="acceptConsent()">ZUSTIMMEN UND FORTFAHREN</button>
+<div id="main" class="main">
+    <div class="header">
+        <span>WIPULSCAN <span style="color:#ffdd88;">PRO</span></span>
+        <span style="color:#0f0; font-size:14px;">● SYSTEM ONLINE</span>
     </div>
-</div>
-
-<!-- IMPRESSUM -->
-<div id="impressum" class="screen">
-    <div style="max-width:380px; text-align:center; padding:30px;">
-        <h3>COBRA DYNAMICS</h3>
-        <p>Gegründet 1976 in San Francisco</p>
-        <p>WIPULSCAN PRO © 2026</p>
-        <p>Alle Rechte vorbehalten.</p>
-        <button onclick="startRealApp()" style="margin-top:40px;">APP STARTEN</button>
+    
+    <div class="scan-frame">
+        <div class="scan-line"></div>
+    </div>
+    
+    <div class="bottom-bar">
+        <div>V-POOL ACTIVE</div>
+        <div>SIGNAL 98.4%</div>
+        <div>COBRA-7 PROTOCOL</div>
     </div>
 </div>
 
 <script>
-// === Dein bisheriges schönes Intro (leicht bereinigt) ===
-let CI = { ac:null, ctx:null, running:false, raf:0, t0:0, irisT:0, W:0, H:0 };
-
-function startIntro(){ ... }   // ← dein aktuelles Intro hier rein (das letzte was gut lief)
-
 function ciDone(){
-  CI.running = false;
-  document.getElementById('ic').style.opacity = '0';
-  
-  setTimeout(() => {
-    document.getElementById('consent').style.display = 'flex';
-  }, 800);
+    document.getElementById('ic').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('main').style.display = 'flex';
+    }, 700);
 }
 
-// === Consent Flow ===
-function acceptConsent(){
-  document.getElementById('consent').style.display = 'none';
-  document.getElementById('impressum').style.display = 'flex';
-}
-
-function startRealApp(){
-  document.getElementById('impressum').style.display = 'none';
-  
-  // ← HIER kommt deine echte App hin (Kamera, Scanner, was auch immer du vorher hattest)
-  alert("✅ Willkommen bei WIPULSCAN PRO\n\nApp wird jetzt geladen...");
-  
-  // Später ersetzen durch: initScanner(); oder startCamera(); oder was du vorher hattest
-}
+window.onload = startIntro;
 </script>
 </body>
 </html>

@@ -10,40 +10,38 @@
         canvas { position:fixed; top:0; left:0; }
 
         .app {
-            position:fixed; inset:0; display:none; background:radial-gradient(circle at 50% 15%, #001122 0%, #000511 80%);
-            flex-direction:column;
+            position:fixed; inset:0; display:none; flex-direction:column;
+            background: radial-gradient(circle at 50% 25%, #001122 10%, #000 80%);
         }
         .header {
-            height:82px; background:rgba(0,20,40,0.96); border-bottom:2px solid #00eeff;
-            display:flex; align-items:center; justify-content:space-between; padding:0 28px;
-            font-family:'Cinzel', serif; font-size:23px; letter-spacing:6px; color:#ddffcc;
-            box-shadow:0 4px 40px rgba(0,255,255,0.15);
+            height:82px; background:rgba(0,28,55,0.97); border-bottom:2px solid #00eeff;
+            display:flex; align-items:center; justify-content:space-between; padding:0 30px;
+            font-family:'Cinzel', serif; font-size:24px; letter-spacing:8px; color:#ddffcc;
+            box-shadow:0 8px 50px rgba(0,255,255,0.25);
         }
         .scan {
-            flex:1; margin:25px; border:1px solid rgba(0,255,220,0.5); border-radius:22px;
-            position:relative; overflow:hidden; box-shadow:0 0 90px rgba(0,240,255,0.35);
-            background:rgba(0,10,30,0.6);
+            flex:1; margin:28px; border:2px solid rgba(0,255,220,0.6); border-radius:22px;
+            position:relative; overflow:hidden; box-shadow:0 0 110px rgba(0,255,200,0.4);
         }
-        .holo {
-            position:absolute; inset:0; border:2px solid #00ffcc; border-radius:22px;
-            opacity:0.4; animation:holo-rotate 7s linear infinite;
-        }
-        @keyframes holo-rotate { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .holo { position:absolute; inset:0; border:3px solid #00ffcc; border-radius:22px;
+                 opacity:0.35; animation:holo 8s linear infinite; }
+        @keyframes holo { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
 
         .scan-line {
-            position:absolute; left:0; right:0; height:4px; background:linear-gradient(90deg, transparent, #00ffdd, #00ffdd, transparent);
-            box-shadow:0 0 45px #00ffdd; animation:scan 2.2s linear infinite;
+            position:absolute; left:0; right:0; height:5px;
+            background:linear-gradient(90deg, transparent, #00ffdd, #00ffdd, transparent);
+            box-shadow:0 0 60px #00ffdd; animation:scan 2s linear infinite;
         }
-        @keyframes scan { 0%{top:-30px} 100%{top:100%} }
+        @keyframes scan { 0%{top:-50px} 100%{top:100%} }
 
-        .center-text {
+        .center {
             position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-            text-align:center; color:#00ffdd; font-size:15px; letter-spacing:5px;
+            text-align:center; color:#fff; font-size:18px; letter-spacing:6px;
             text-shadow:0 0 30px #00ffdd;
         }
         .bottom {
-            height:88px; background:rgba(0,15,35,0.95); display:flex; align-items:center; justify-content:space-around;
-            font-size:14px; color:#88eeff;
+            height:90px; background:rgba(0,18,40,0.95); display:flex; align-items:center; justify-content:space-around;
+            font-size:15px; color:#88eeff; letter-spacing:3px;
         }
     </style>
 </head>
@@ -54,24 +52,24 @@
 <div id="app" class="app">
     <div class="header">
         <span>WIPULSCAN <span style="color:#ffdd88;">PRO</span></span>
-        <span style="color:#00ffbb;">● QUANTUM CORE ONLINE</span>
+        <span style="color:#00ffbb; font-size:15px;">● COBRA CORE ACTIVE</span>
     </div>
     
     <div class="scan">
         <div class="holo"></div>
-        <div class="holo" style="animation-delay:2.3s; opacity:0.25"></div>
+        <div class="holo" style="animation-delay:3s; opacity:0.2"></div>
         <div class="scan-line"></div>
         
-        <div class="center-text">
+        <div class="center">
             V-POOL<br>
-            <span style="font-size:42px; color:#fff; letter-spacing:8px;">SCANNING</span>
+            <span style="font-size:52px; color:#ddffcc;">SCANNING</span>
         </div>
     </div>
     
     <div class="bottom">
         <div>ANALYZER</div>
-        <div>HISTORY</div>
         <div>SPECTRUM</div>
+        <div>HISTORY</div>
     </div>
 </div>
 
@@ -80,10 +78,9 @@ function ciDone(){
     document.getElementById('ic').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('app').style.display = 'flex';
-    }, 900);
+    }, 800);
 }
 
-// Dein Intro wird automatisch gestartet
 window.onload = startIntro;
 </script>
 </body>

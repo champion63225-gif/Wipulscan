@@ -17,3 +17,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 @keyframes tgT{0%,100%{opacity:.3}50%{opacity:1}}
 
 /* Der Rest deines alten CSS kommt hier rein. Kopiere einfach alles aus deiner ursprünglichen index.html (alles was in <style> war) und füge es hier unten ein. */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--gold:#d4af37;--glt:#f5e070;--green:#00e676;--red:#f44336;--blue:#29b6f6;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:'Share Tech Mono',monospace;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+/* ── TAP GATE ── */
+#tapgate{position:fixed;inset:0;z-index:600;background:radial-gradient(ellipse at 50% 42%,#0a0a1a,#000);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+#tapgate.gone{display:none!important;pointer

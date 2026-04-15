@@ -8,7 +8,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4499ff">
     <title>WIPULSCAN · PRO</title>
-    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -27,7 +26,7 @@
     </div>
 
 <script>
-// === SAUBERER BASS-HERZSCHLAG INTRO ===
+// === NUR TIEFER BASS-HERZSCHLAG – KEIN PIEPSEN ===
 
 let CI = {
   ac: null, ctx: null, running: false, raf: 0, t0: 0,
@@ -50,36 +49,20 @@ function wifi(cx, cy, R, col, al, gl){
   if(al <= 0 || R < 2) return;
   const c = CI.ctx, a0 = Math.PI*1.168, a1 = Math.PI*1.832;
   c.save(); c.globalAlpha = al;
-  [{r:R, sw:R*0.13}, {r:R*0.62, sw:R*0.105}, {r:R*0.34, sw:R*0.082}].forEach(ar => {
-    c.save(); c.shadowColor = col; c.shadowBlur = gl * ar.r * 0.18;
-    c.beginPath(); c.arc(cx, cy, ar.r, a0, a1);
-    c.strokeStyle = col; c.lineWidth = ar.sw; c.lineCap = 'round'; c.stroke(); c.restore();
+  [{r:R,sw:R*0.13},{r:R*0.62,sw:R*0.105},{r:R*0.34,sw:R*0.082}].forEach(ar=>{
+    c.save(); c.shadowColor=col; c.shadowBlur=gl*ar.r*0.18;
+    c.beginPath(); c.arc(cx,cy,ar.r,a0,a1);
+    c.strokeStyle=col; c.lineWidth=ar.sw; c.lineCap='round'; c.stroke(); c.restore();
   });
-  c.beginPath(); c.arc(cx, cy + R*0.62, R*0.11, 0, Math.PI*2);
-  c.fillStyle = col; c.fill();
+  c.beginPath(); c.arc(cx,cy+R*0.62,R*0.11,0,Math.PI*2); c.fillStyle=col; c.fill();
   c.restore();
-}
-
-function makeFrags(cx, cy){
-  CI.frags = [ '#d4af37', '#f5e070', '#fff', '#00ddff'];
-  for(let i = 0; i < 110; i++){
-    const a = Math.random()*Math.PI*2;
-    const sp = 0.8 + Math.random()*4.2;
-    CI.frags.push({
-      x: cx, y: cy,
-      vx: Math.cos(a)*sp, vy: Math.sin(a)*sp - 0.8 - Math.random()*2.2,
-      life: 1, dec: 0.005 + Math.random()*0.012,
-      sz: 1.2 + Math.random()*4.5,
-      col: cols });
-  }
 }
 
 function heartBeat(time, strength){
   if(!CI.ac) return;
-  const ac = CI.ac;
-  const o = ac.createOscillator();
-  const g = ac.createGain();
-  const f = ac.createBiquadFilter();
+  const o = CI.ac.createOscillator();
+  const g = CI.ac.createGain();
+  const f = CI.ac.createBiquadFilter();
 
   o.type = 'sine';
   o.frequency.setValueAtTime(42, time);
@@ -92,14 +75,8 @@ function heartBeat(time, strength){
   g.gain.linearRampToValueAtTime(strength, time + 0.04);
   g.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
 
-  o.connect(f); f.connect(g); g.connect(ac.destination);
+  o.connect(f); f.connect(g); g.connect(CI.ac.destination);
   o.start(time); o.stop(time + 1.4);
-}
-
-function playHeartBeat(){
-  const t = CI.ac.currentTime;
-  heartBeat(t, 1.4);
-  heartBeat(t + 0.82, 0.95);
 }
 
 function ciLoop(now){
@@ -112,35 +89,65 @@ function ciLoop(now){
   c.clearRect(0,0,W,H);
   c.fillStyle = '#000'; c.fillRect(0,0,W,H);
 
-  // Nebula + WiFi + Logo... (der Rest ist gleich wie vorher)
+  // Nebula
+  if(t >= 400){
+    const na = Math.min((t-400)/1200, 0.1) + Math.abs(Math.sin(t*0.0018))*0.05;
+    const nb = c.createRadialGradient(cx,cy,0,cx,cy,R*2.1);
+    nb.addColorStop(0, CB+(na*1.4)+')');
+    nb.addColorStop(0.5, CB+(na*0.4)+')');
+    nb.addColorStop(1, CB+'0)');
+    c.beginPath(); c.arc(cx,cy,R*2.1,0,Math.PI*2); c.fillStyle=nb; c.fill();
+  }
+
+  // WiFi Symbol
+  let wA = 0, wS = 1, wG = 2;
+  if(t >= 400){
+    if(t < 1400){
+      const p = (t-400)/1000; wA = Math.min(eEl(p)*1.8,1); wS = p*0.98+0.02; wG = p*3;
+    } else if(!BLD.logo){
+      wA = 0.9 + Math.sin(t*0.003)*0.1;
+      wG = 2;
+    }
+    if(wA > 0) wifi(cx, cy, R * wS, '#00ddff', wA, wG);
+  }
+
+  // Logo
+  if(!BLD.logo && t >= BLD.START){
+    const iv = BLD.I0 * Math.pow(BLD.I1/BLD.I0, Math.min((t-BLD.START)/BLD.DUR,1));
+    if(iv <= BLD.I1){
+      BLD.logo = true; BLD.logoT = t;
+      heartBeat(CI.ac.currentTime, 1.4);
+      heartBeat(CI.ac.currentTime + 0.82, 0.95);
+    }
+  }
+
+  // Logo Text
+  if(BLD.logo){
+    const la = t - BLD.logoT;
+    const tp = Math.min(la/500,1), tsc = 0.3 + eOut3(tp)*0.7, tal = eOut3(tp);
+    if(tal > 0.01){
+      c.save(); c.translate(cx, cy*0.95); c.scale(tsc, tsc);
+      c.shadowColor = '#d4af37'; c.shadowBlur = 32 * tal;
+      c.fillStyle = '#f5e070';
+      c.font = `700 ${fs}px Cinzel, serif`;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('WIPULSCAN', 0, 0);
+      c.restore();
+    }
+    if(la > 1850){
+      CI.waitTap = true;
+    }
+  }
 
   if(CI.irisT){
     const ip = Math.min((now - CI.irisT)/1400, 1);
-    if(!CI.fragsOk){ makeFrags(cx, cy*0.95); CI.fragsOk = true; }
-    CI.frags.forEach(f => {
-      f.x += f.vx; f.y += f.vy; f.vy += 0.038; f.vx *= 0.989; f.life -= f.dec;
-      if(f.life <= 0) return;
-      c.save();
-      c.shadowBlur = 5*f.life;
-      c.fillStyle = f.col; c.globalAlpha = f.life*0.9;
-      c.fillRect(f.x - f.sz*0.5, f.y - f.sz*0.5, f.sz, f.sz);
-      c.restore();
-    });
-
-    const ir = Math.sqrt(W*W + H*H) * 0.65 * eIO(Math.min(ip*1.04,1));
-    c.save(); 
-    c.beginPath(); 
-    c.rect(0,0,W,H); 
-    c.arc(cx, cy*0.95, Math.max(0,ir), 0, Math.PI*2, true);
-    c.fillStyle = '#000'; c.fill('evenodd'); 
-    c.restore();
-
     if(ip >= 1) ciDone();
   }
 }
 
 function startIntro(){
   document.getElementById('tapgate').style.display = 'none';
+  
   const ic = document.getElementById('ic');
   CI.W = window.innerWidth; CI.H = window.innerHeight;
   const dpr = window.devicePixelRatio || 1;
@@ -155,10 +162,6 @@ function startIntro(){
   CI.running = true;
   CI.t0 = performance.now();
   CI.raf = requestAnimationFrame(ciLoop);
-
-  setTimeout(() => {
-    if(!BLD.logo) playHeartBeat();
-  }, 600);
 }
 
 function ciDone(){
@@ -167,6 +170,6 @@ function ciDone(){
   document.getElementById('intro').style.display = 'none';
   alert("Willkommen bei WIPULSCAN PRO ✨");
 }
-
-window.onload = () => { /* nichts */ };
 </script>
+</body>
+</html>

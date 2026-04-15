@@ -29,26 +29,22 @@
 <canvas id="ic"></canvas>
 
 <script>
-// ====================== MEGA EDLES INTRO ======================
+// ====================== INTRO BLEIBT – DANACH KOMMT DIE APP ======================
+
 let CI = { ac:null, ctx:null, running:false, raf:0, t0:0, W:0, H:0 };
-let phase = 0; // 0 = pulsing, 1 = logo
+let phase = 0;
 
 function heartbeat(t, vol){
   if(!CI.ac) return;
   const o = CI.ac.createOscillator();
   const g = CI.ac.createGain();
   const f = CI.ac.createBiquadFilter();
-  
-  o.type = 'sine';
-  o.frequency.setValueAtTime(44, t);
+  o.type = 'sine'; o.frequency.setValueAtTime(44, t);
   o.frequency.exponentialRampToValueAtTime(23, t+1.0);
-  
   f.type = 'lowpass'; f.frequency.value = 125;
-  
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(vol, t+0.04);
   g.gain.exponentialRampToValueAtTime(0.001, t+1.35);
-  
   o.connect(f); f.connect(g); g.connect(CI.ac.destination);
   o.start(t); o.stop(t+1.5);
 }
@@ -62,21 +58,10 @@ function ciLoop(now){
 
   c.fillStyle = '#000'; c.fillRect(0,0,W,H);
 
-  // Leichter futuristischer Hintergrund
-  const scan = Math.sin(t*0.00085)*0.35 + 0.65;
-  const g = c.createRadialGradient(cx,cy,R*0.4, cx,cy,R*3);
-  g.addColorStop(0, `rgba(0,240,255,${scan*0.08})`);
-  g.addColorStop(1, 'rgba(0,30,80,0)');
-  c.fillStyle = g; c.fillRect(0,0,W,H);
-
-  // Pulsierendes WLAN + Herzschlag
+  const pulse = 0.7 + Math.sin(t*0.0036)*0.3;
   if(phase === 0){
-    const pulse = 0.7 + Math.sin(t*0.0036)*0.3;
-    
-    // Herzschlag im perfekten Takt
     if(t > 800 && (t % 760 < 45)) heartbeat(CI.ac.currentTime, 1.32);
 
-    // WLAN zeichnen
     c.save(); c.globalAlpha = pulse;
     [{r:R*1.1,sw:R*0.15},{r:R*0.68,sw:R*0.115},{r:R*0.39,sw:R*0.09}].forEach(a=>{
       c.shadowBlur = 42; c.shadowColor = '#00eeff';
@@ -91,13 +76,10 @@ function ciLoop(now){
     }
   }
 
-  // WIPULSCAN PRO kommt majestätisch
   if(phase === 1){
     const p = Math.min((t - CI.logoT)/820, 1);
-    const s = 0.2 + eOut3(p)*0.85;
-    c.save();
-    c.translate(cx, cy*0.93);
-    c.scale(s, s);
+    const s = 0.2 + (1 - Math.pow(1-p,3))*0.85;
+    c.save(); c.translate(cx, cy*0.93); c.scale(s,s);
     c.shadowBlur = 68; c.shadowColor = '#ffe38c';
     c.fillStyle = '#ffe38c';
     c.font = '900 82px Cinzel';
@@ -105,13 +87,30 @@ function ciLoop(now){
     c.fillText('WIPULSCAN', 0, 0);
     c.restore();
 
-    if(p > 0.94){
-      setTimeout(ciDone, 900);
+    if(p > 0.95){
+      setTimeout(finishIntro, 600);
     }
   }
 }
 
-function eOut3(t){ return 1 - Math.pow(1-t,3); }
+function finishIntro(){
+  CI.running = false;
+  cancelAnimationFrame(CI.raf);
+  document.getElementById('ic').style.opacity = '0';
+
+  setTimeout(() => {
+    // === AB HIER KOMMT DEINE EIGENTLICHE APP ===
+    document.body.innerHTML = `
+      <div style="position:fixed; inset:0; background:#001122; color:#00ffcc; display:flex; align-items:center; justify-content:center; font-size:28px; font-family:Arial;">
+        <div>
+          <h1>WIPULSCAN PRO</h1>
+          <p style="font-size:18px; margin-top:20px;">App ist jetzt gestartet</p>
+          <p style="margin-top:40px; font-size:16px;">V-Pool Scan bereit</p>
+        </div>
+      </div>
+    `;
+  }, 800);
+}
 
 function startIntro(){
   document.getElementById('tapgate').style.opacity = '0';
@@ -130,12 +129,7 @@ function startIntro(){
   CI.t0 = performance.now();
   requestAnimationFrame(ciLoop);
 }
-
-function ciDone(){
-  CI.running = false;
-  alert("Willkommen bei WIPULSCAN PRO ✨");
-  // Hier kommt später dein Scanner etc. hin
-}
+</script>
 </script>
 </body>
 </html>

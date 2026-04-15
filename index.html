@@ -10,37 +10,40 @@
         canvas { position:fixed; top:0; left:0; }
 
         .app {
-            position:fixed; inset:0; display:none; background:radial-gradient(circle at 50% 20%, #001a33 0%, #000 70%);
+            position:fixed; inset:0; display:none; background:radial-gradient(circle at 50% 15%, #001122 0%, #000511 80%);
             flex-direction:column;
         }
         .header {
-            height:78px; background:rgba(0,28,55,0.95); border-bottom:2px solid #00eeff;
-            display:flex; align-items:center; justify-content:space-between; padding:0 25px;
-            font-family:'Cinzel', serif; font-size:21px; letter-spacing:5px; color:#ddffcc;
-            box-shadow:0 4px 30px rgba(0,240,255,0.15);
+            height:82px; background:rgba(0,20,40,0.96); border-bottom:2px solid #00eeff;
+            display:flex; align-items:center; justify-content:space-between; padding:0 28px;
+            font-family:'Cinzel', serif; font-size:23px; letter-spacing:6px; color:#ddffcc;
+            box-shadow:0 4px 40px rgba(0,255,255,0.15);
         }
         .scan {
-            flex:1; margin:24px; border:1px solid rgba(0,240,255,0.6); border-radius:18px;
-            position:relative; overflow:hidden; box-shadow:0 0 80px rgba(0,220,255,0.4);
+            flex:1; margin:25px; border:1px solid rgba(0,255,220,0.5); border-radius:22px;
+            position:relative; overflow:hidden; box-shadow:0 0 90px rgba(0,240,255,0.35);
+            background:rgba(0,10,30,0.6);
         }
-        .holo-ring {
-            position:absolute; inset:0; border:2px solid #00ffcc; border-radius:18px;
-            animation:holo 6s linear infinite;
+        .holo {
+            position:absolute; inset:0; border:2px solid #00ffcc; border-radius:22px;
+            opacity:0.4; animation:holo-rotate 7s linear infinite;
         }
-        @keyframes holo { 0%{transform:rotate(0deg); opacity:0.6} 100%{transform:rotate(360deg); opacity:0.3} }
+        @keyframes holo-rotate { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
 
         .scan-line {
-            position:absolute; left:0; right:0; height:4px; background:linear-gradient(90deg, transparent, #00ffdd, transparent);
-            box-shadow:0 0 40px #00ffdd; animation:scan 2.4s linear infinite;
+            position:absolute; left:0; right:0; height:4px; background:linear-gradient(90deg, transparent, #00ffdd, #00ffdd, transparent);
+            box-shadow:0 0 45px #00ffdd; animation:scan 2.2s linear infinite;
         }
-        @keyframes scan { 0%{top:-20px} 100%{top:100%} }
+        @keyframes scan { 0%{top:-30px} 100%{top:100%} }
 
-        .data {
-            position:absolute; bottom:20px; left:20px; color:#00ffcc; font-size:13px; line-height:1.4;
+        .center-text {
+            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            text-align:center; color:#00ffdd; font-size:15px; letter-spacing:5px;
+            text-shadow:0 0 30px #00ffdd;
         }
         .bottom {
-            height:82px; background:rgba(0,15,35,0.95); display:flex; align-items:center; justify-content:space-around;
-            font-size:13px; color:#88eeff; letter-spacing:2px;
+            height:88px; background:rgba(0,15,35,0.95); display:flex; align-items:center; justify-content:space-around;
+            font-size:14px; color:#88eeff;
         }
     </style>
 </head>
@@ -51,24 +54,24 @@
 <div id="app" class="app">
     <div class="header">
         <span>WIPULSCAN <span style="color:#ffdd88;">PRO</span></span>
-        <span style="color:#00ffaa; font-size:14px;">● QUANTUM LINK ACTIVE</span>
+        <span style="color:#00ffbb;">● QUANTUM CORE ONLINE</span>
     </div>
     
     <div class="scan">
-        <div class="holo-ring"></div>
-        <div class="holo-ring" style="animation-delay:2s"></div>
+        <div class="holo"></div>
+        <div class="holo" style="animation-delay:2.3s; opacity:0.25"></div>
         <div class="scan-line"></div>
-        <div class="data">
-            V-POOL SIGNAL<br>
-            <span style="font-size:24px;color:#fff">98.7%</span><br>
-            COBRA-9 PROTOCOL
+        
+        <div class="center-text">
+            V-POOL<br>
+            <span style="font-size:42px; color:#fff; letter-spacing:8px;">SCANNING</span>
         </div>
     </div>
     
     <div class="bottom">
-        <div>SCAN</div>
         <div>ANALYZER</div>
         <div>HISTORY</div>
+        <div>SPECTRUM</div>
     </div>
 </div>
 
@@ -77,9 +80,10 @@ function ciDone(){
     document.getElementById('ic').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('app').style.display = 'flex';
-    }, 800);
+    }, 900);
 }
 
+// Dein Intro wird automatisch gestartet
 window.onload = startIntro;
 </script>
 </body>

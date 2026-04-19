@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WiPulScan Pro – Spatial WiFi Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="wipulscan.css" />
+</head>
+<body>
+
+<!-- ═══════════════════ INTRO SCREEN ═══════════════════ -->
+<div id="intro-screen">
+  <canvas id="intro-canvas"></canvas>
+
+  <div id="intro-content">
+    <div id="intro-logo">
+      <div class="logo-rings">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="ring ring-4"></div>
+        <div class="ring-core">
+          <i class="fa-solid fa-wifi"></i>
+        </div>
+      </div>
+      <div id="intro-title">
+        <span class="title-wi">Wi</span><span class="title-pul">Pul</span><span class="title-scan">Scan</span>
+        <span class="title-pro">PRO</span>
+      </div>
+      <div id="intro-subtitle">Spatial WiFi Signal Scanner</div>
+    </div>
+
+    <div id="intro-boot-log">
+      <div class="boot-line" id="boot-0">▶ SYSTEM INIT ................................ <span class="ok">OK</span></div>
+      <div class="boot-line" id="boot-1">▶ LOADING RF MODULES ......................... <span class="ok">OK</span></div>
+      <div class="boot-line" id="boot-2">▶ CALIBRATING SPATIAL SENSORS ................ <span class="ok">OK</span></div>
+      <div class="boot-line" id="boot-3">▶ NETWORK INTERFACE DETECTED ................. <span class="ok">OK</span></div>
+      <div class="boot-line" id="boot-4">▶ INITIALIZING SIGNAL MATRIX ................. <span class="ok">OK</span></div>
+      <div class="boot-line" id="boot-5">▶ WIPULSCAN PRO v3.1.4 READY ................ <span class="ok">LAUNCH</span></div>
+    </div>
+
+    <div id="intro-progress-wrap">
+      <div id="intro-progress-bar"><div id="intro-progress-fill"></div></div>
+      <div id="intro-progress-label">0%</div>
+    </div>
+
+    <button id="btn-enter" class="hidden">
+      <i class="fa-solid fa-circle-play"></i> Scanner starten
+    </button>
+  </div>
+
+  <!-- WAV Audio -->
+  <audio id="intro-audio" preload="auto">
+    <!-- WAV wird per JS geladen falls vorhanden -->
+  </audio>
+</div>
+
+<!-- ═══════════════════ MAIN APP ═══════════════════ -->
+<div id="app" class="hidden">
+
+  <!-- Header -->
+  <header id="app-header">
+    <div class="hdr-left">
+      <div class="hdr-logo">
+        <i class="fa-solid fa-wifi"></i>
+        <span>WiPulScan <strong>PRO</strong></span>
+      </div>
+      <div id="connection-badge" class="badge-offline">
+        <span class="badge-dot"></span>
+        <span id="badge-label">Kein Signal</span>
+      </div>
+    </div>
+    <nav class="hdr-nav">
+      <button class="tab-btn active" data-tab="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+      <button class="tab-btn" data-tab="spatial"><i class="fa-solid fa-map-location-dot"></i> Spatial Map</button>
+      <button class="tab-btn" data-tab="analysis"><i class="fa-solid fa-chart-line"></i> Analyse</button>
+      <button class="tab-btn" data-tab="log"><i class="fa-solid fa-terminal"></i> Live-Log</button>
+    </nav>
+    <div class="hdr-right">
+      <button id="btn-scan-toggle" class="btn-scan">
+        <i class="fa-solid fa-play"></i> Scan starten
+      </button>
+      <button id="btn-export" class="btn-export" title="Daten exportieren">
+        <i class="fa-solid fa-download"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─────── TAB: DASHBOARD ─────── -->
+  <section id="tab-dashboard" class="tab-view active">
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi-card" id="kpi-signal">
+        <div class="kpi-icon"><i class="fa-solid fa-signal"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-label">Signalstärke</div>
+          <div class="kpi-value" id="val-signal">—</div>
+          <div class="kpi-unit">dBm (est.)</div>
+        </div>
+        <div class="kpi-gauge" id="gauge-signal"></div>
+      </div>
+
+      <div class="kpi-card" id="kpi-quality">
+        <div class="kpi-icon"><i class="fa-solid fa-chart-bar"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-label">Verbindungsqualität</div>
+          <div class="kpi-value" id="val-quality">—</div>
+          <div class="kpi-unit">Score 0–100</div>
+        </div>
+        <div class="kpi-bar-wrap">
+          <div class="kpi-bar" id="bar-quality"></div>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-latency">
+        <div class="kpi-icon"><i class="fa-solid fa-stopwatch"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-label">Latenz (RTT)</div>
+          <div class="kpi-value" id="val-latency">—</div>
+          <div class="kpi-unit">ms</div>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-downlink">
+        <div class="kpi-icon"><i class="fa-solid fa-arrow-down"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-label">Downlink</div>
+          <div class="kpi-value" id="val-downlink">—</div>
+          <div class="kpi-unit">Mbps</div>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-type">
+        <div class="kpi-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-label">Verbindungstyp</div>
+          <div class="kpi-value" id="val-type">—</div>
+          <div class="kpi-unit">Netzwerk</div>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-throughput">
+        <div class="kpi-icon"><i class="fa-solid fa-gauge"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-label">Gemessener Throughput</div>
+          <div class="kpi-value" id="val-throughput">—</div>
+          <div class="kpi-unit">Mbps (live)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Radar + Stats -->
+    <div class="dash-grid">
+      <div class="panel radar-panel">
+        <div class="panel-hdr"><i class="fa-solid fa-circle-dot"></i> Signal-Radar (Live)</div>
+        <canvas id="radar-canvas" width="320" height="320"></canvas>
+        <div id="radar-info">
+          <span id="radar-freq">—</span>
+          <span id="radar-rtt">RTT: —</span>
+        </div>
+      </div>
+
+      <div class="panel stats-panel">
+        <div class="panel-hdr"><i class="fa-solid fa-list-ul"></i> Verbindungsdetails</div>
+        <div class="stats-table" id="stats-table">
+          <div class="stat-row"><span>Netzwerktyp</span><span id="st-nettype">—</span></div>
+          <div class="stat-row"><span>Effektiver Typ</span><span id="st-efftype">—</span></div>
+          <div class="stat-row"><span>Downlink (API)</span><span id="st-downlink">—</span></div>
+          <div class="stat-row"><span>RTT (API)</span><span id="st-rtt">—</span></div>
+          <div class="stat-row"><span>Datensaver</span><span id="st-datasaver">—</span></div>
+          <div class="stat-row"><span>Online-Status</span><span id="st-online">—</span></div>
+          <div class="stat-row"><span>Gemess. Latenz</span><span id="st-mlatency">—</span></div>
+          <div class="stat-row"><span>Min. Latenz</span><span id="st-minlat">—</span></div>
+          <div class="stat-row"><span>Max. Latenz</span><span id="st-maxlat">—</span></div>
+          <div class="stat-row"><span>Avg. Latenz</span><span id="st-avglat">—</span></div>
+          <div class="stat-row"><span>Gemess. Throughput</span><span id="st-throughput">—</span></div>
+          <div class="stat-row"><span>Messungen gesamt</span><span id="st-count">0</span></div>
+          <div class="stat-row"><span>User Agent</span><span id="st-ua" class="truncate">—</span></div>
+          <div class="stat-row"><span>Protokoll</span><span id="st-proto">—</span></div>
+        </div>
+      </div>
+
+      <div class="panel chart-panel">
+        <div class="panel-hdr"><i class="fa-solid fa-wave-square"></i> Latenz-Verlauf (Live)</div>
+        <canvas id="latency-chart" height="180"></canvas>
+      </div>
+
+      <div class="panel chart-panel">
+        <div class="panel-hdr"><i class="fa-solid fa-chart-area"></i> Throughput-Verlauf (Live)</div>
+        <canvas id="throughput-chart" height="180"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────── TAB: SPATIAL MAP ─────── -->
+  <section id="tab-spatial" class="tab-view hidden">
+    <div class="spatial-layout">
+      <div class="panel spatial-panel">
+        <div class="panel-hdr">
+          <i class="fa-solid fa-map-location-dot"></i> Räumliche Signal-Heatmap
+          <div class="spatial-controls">
+            <button id="btn-spatial-clear" class="btn-sm-ghost"><i class="fa-solid fa-eraser"></i> Löschen</button>
+            <button id="btn-spatial-point" class="btn-sm-primary active"><i class="fa-solid fa-crosshairs"></i> Messpunkt</button>
+          </div>
+        </div>
+        <div class="spatial-instructions">
+          <i class="fa-solid fa-hand-pointer"></i>
+          Klicke auf die Karte um einen Messpunkt an deiner aktuellen Position zu setzen.
+          Die Farbe zeigt die gemessene Verbindungsqualität (Grün = gut, Rot = schlecht).
+        </div>
+        <div id="spatial-container">
+          <canvas id="spatial-canvas"></canvas>
+          <div id="spatial-crosshair"><i class="fa-solid fa-crosshairs"></i></div>
+        </div>
+        <div id="spatial-legend">
+          <span class="leg-item"><span class="leg-dot" style="background:#00ff88"></span>Excellent</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#88ff00"></span>Good</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#ffcc00"></span>Fair</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#ff6600"></span>Poor</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#ff0044"></span>Bad</span>
+        </div>
+      </div>
+
+      <div class="spatial-sidebar">
+        <div class="panel">
+          <div class="panel-hdr"><i class="fa-solid fa-map-pin"></i> Messpunkte</div>
+          <div id="spatial-points-list" class="points-list"></div>
+          <div id="spatial-empty" class="spatial-empty">
+            Noch keine Messpunkte gesetzt.<br>Klicke auf die Karte, um zu beginnen.
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><i class="fa-solid fa-chart-pie"></i> Räumliche Statistik</div>
+          <div class="stats-table" id="spatial-stats">
+            <div class="stat-row"><span>Messpunkte</span><span id="sp-count">0</span></div>
+            <div class="stat-row"><span>Beste Qualität</span><span id="sp-best">—</span></div>
+            <div class="stat-row"><span>Schlechteste</span><span id="sp-worst">—</span></div>
+            <div class="stat-row"><span>Durchschnitt</span><span id="sp-avg">—</span></div>
+            <div class="stat-row"><span>Optimale Zone</span><span id="sp-zone">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────── TAB: ANALYSE ─────── -->
+  <section id="tab-analysis" class="tab-view hidden">
+    <div class="analysis-layout">
+      <div class="panel analysis-main">
+        <div class="panel-hdr"><i class="fa-solid fa-magnifying-glass-chart"></i> Signalanalyse</div>
+
+        <div class="analysis-grid">
+          <div class="analysis-card" id="ana-stability">
+            <div class="ana-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="ana-label">Verbindungsstabilität</div>
+            <div class="ana-value" id="ana-val-stability">Messen …</div>
+            <div class="ana-bar-wrap"><div class="ana-bar" id="ana-bar-stability"></div></div>
+          </div>
+          <div class="analysis-card" id="ana-jitter">
+            <div class="ana-icon"><i class="fa-solid fa-wave-square"></i></div>
+            <div class="ana-label">Jitter</div>
+            <div class="ana-value" id="ana-val-jitter">— ms</div>
+            <div class="ana-sub">Standardabweichung der Latenz</div>
+          </div>
+          <div class="analysis-card" id="ana-packetloss">
+            <div class="ana-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="ana-label">Paketverlust (est.)</div>
+            <div class="ana-value" id="ana-val-packetloss">— %</div>
+            <div class="ana-sub">Basierend auf Timeout-Rate</div>
+          </div>
+          <div class="analysis-card" id="ana-score">
+            <div class="ana-icon"><i class="fa-solid fa-star"></i></div>
+            <div class="ana-label">Gesamt-Score</div>
+            <div class="ana-value ana-big" id="ana-val-score">—</div>
+            <div class="ana-sub" id="ana-rating">Noch nicht genug Daten</div>
+          </div>
+        </div>
+
+        <div class="panel-hdr" style="margin-top:1.5rem;"><i class="fa-solid fa-histogram"></i> Latenz-Histogramm</div>
+        <canvas id="histogram-chart" height="200"></canvas>
+
+        <div class="panel-hdr" style="margin-top:1.5rem;"><i class="fa-solid fa-lightbulb"></i> Empfehlungen</div>
+        <div id="recommendations" class="recommendations">
+          <div class="rec-placeholder">Starte den Scanner für personalisierte Empfehlungen …</div>
+        </div>
+      </div>
+
+      <div class="analysis-sidebar">
+        <div class="panel">
+          <div class="panel-hdr"><i class="fa-solid fa-network-wired"></i> Browser / Gerät</div>
+          <div class="stats-table" id="device-info-table">
+            <!-- filled by JS -->
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><i class="fa-solid fa-clock"></i> Session</div>
+          <div class="stats-table">
+            <div class="stat-row"><span>Gestartet</span><span id="session-start">—</span></div>
+            <div class="stat-row"><span>Laufzeit</span><span id="session-duration">—</span></div>
+            <div class="stat-row"><span>Messungen</span><span id="session-count">0</span></div>
+            <div class="stat-row"><span>Datenpunkte</span><span id="session-points">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────── TAB: LOG ─────── -->
+  <section id="tab-log" class="tab-view hidden">
+    <div class="panel log-panel">
+      <div class="panel-hdr">
+        <span><i class="fa-solid fa-terminal"></i> Live-Messdaten Log</span>
+        <div>
+          <select id="log-filter" class="select-sm">
+            <option value="all">Alle Einträge</option>
+            <option value="latency">Latenz</option>
+            <option value="network">Netzwerk</option>
+            <option value="warn">Warnungen</option>
+            <option value="error">Fehler</option>
+          </select>
+          <button id="btn-clear-log" class="btn-sm-ghost"><i class="fa-solid fa-eraser"></i> Löschen</button>
+        </div>
+      </div>
+      <div id="log-output" class="log-output"></div>
+    </div>
+  </section>
+
+</div><!-- /#app -->
+
+<!-- WAV Upload Modal -->
+<div id="wav-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <i class="fa-solid fa-music"></i> WAV-Datei für Intro laden
+      <button onclick="document.getElementById('wav-modal').classList.add('hidden')" class="modal-x">✕</button>
+    </div>
+    <p>Lade deine WAV-Datei für die synchronisierte Intro-Animation hoch:</p>
+    <input type="file" id="wav-file-input" accept=".wav,audio/*" class="file-input" />
+    <div class="modal-footer">
+      <button onclick="document.getElementById('wav-modal').classList.add('hidden')" class="btn-ghost-sm">Ohne Audio fortfahren</button>
+      <button id="btn-load-wav" class="btn-primary-sm"><i class="fa-solid fa-play"></i> Laden & abspielen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="wipulscan.js"></script>
+</body>
+</html>
